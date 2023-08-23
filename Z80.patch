@@ -1,0 +1,31 @@
+diff --git a/API/Z80.h b/API/Z80.h
+index a490b2f..4e900d6 100644
+--- a/API/Z80.h
++++ b/API/Z80.h
+@@ -337,6 +337,13 @@ typedef struct {
+ 
+ 	Z80Notify ld_r_a;
+ 
++	/** @brief Invoked when on return.
++	  *
++	  * This callback is optional and must be set to @c Z_NULL when not
++	  * used. It is invoked before executing the instruction. */
++
++	Z80Notify ret;
++
+ 	/** @brief Invoked to notify that a @c reti instruction has been
+ 	  * fetched.
+ 	  *
+diff --git a/sources/Z80.c b/sources/Z80.c
+index 13f2829..1c6f7c7 100644
+--- a/sources/Z80.c
++++ b/sources/Z80.c
+@@ -674,7 +674,7 @@ static Z_INLINE zuint8 m(Z80 *self, zuint8 offset, zuint8 value)
+ #define M3(value)	     m	(self, 3, value)
+ #define PUSH(value)	     WRITE_16B(SP -= 2, value)
+ #define R_ALL		     ((R & 127) | (R7 & 128))
+-#define RET		     MEMPTR = PC = READ_16(SP); SP += 2
++#define RET		     NOTIFY(ret); MEMPTR = PC = READ_16(SP); SP += 2
+ #define FETCH_XY_EA(address) MEMPTR = (zuint16)(XY + (zsint8)FETCH(address))
+ #define IS_XY_PREFIX(opcode) ((opcode) & 0xDF) == 0xDD
+ #define EX(a, b)	     t = a; a = b; b = t

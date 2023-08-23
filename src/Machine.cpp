@@ -140,9 +140,7 @@ Machine::Machine()
     cpu.fetch = MachineRead;
     cpu.read = MachineRead;
     cpu.write = MachineWrite;
-#if 0
     cpu.ret = MachineRet;
-#endif
     cpu.out = MachineOut;
     cpu.hook = MachineHook;
     breakonret = 0xFFFF;
