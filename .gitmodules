@@ -1,0 +1,6 @@
+[submodule "Z80"]
+	path = Z80
+	url = https://github.com/redcode/Z80
+[submodule "Zeta"]
+	path = Zeta
+	url = https://github.com/redcode/Zeta.git

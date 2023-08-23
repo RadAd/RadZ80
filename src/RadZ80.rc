@@ -1,0 +1,228 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include <Windows.h>
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (United Kingdom) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENG)
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
+#pragma code_page(1252)
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include <Windows.h>\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_REGISTERS DIALOGEX 0, 0, 133, 217
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Z80 Registers"
+MENU IDR_MAIN
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    PUSHBUTTON      "Step",IDC_STEP,7,7,37,14
+    PUSHBUTTON      "&Run",IDC_RUN,48,25,37,14
+    PUSHBUTTON      "&Break",IDC_BREAK,91,25,37,14
+    CTEXT           "A",IDC_STATIC,7,46,14,8
+    EDITTEXT        IDC_REG_A,7,57,14,12,ES_UPPERCASE | ES_AUTOHSCROLL
+    CTEXT           "F",IDC_STATIC,22,46,14,8
+    EDITTEXT        IDC_REG_F,22,57,14,12,ES_UPPERCASE | ES_AUTOHSCROLL
+    CTEXT           "B",IDC_STATIC,37,46,14,8
+    EDITTEXT        IDC_REG_B,37,57,14,12,ES_UPPERCASE | ES_AUTOHSCROLL
+    CTEXT           "C",IDC_STATIC,52,46,14,8
+    EDITTEXT        IDC_REG_C,52,57,14,12,ES_UPPERCASE | ES_AUTOHSCROLL
+    CTEXT           "D",IDC_STATIC,67,46,14,8
+    EDITTEXT        IDC_REG_D,67,57,14,12,ES_UPPERCASE | ES_AUTOHSCROLL
+    CTEXT           "E",IDC_STATIC,82,46,14,8
+    EDITTEXT        IDC_REG_E,82,57,14,12,ES_UPPERCASE | ES_AUTOHSCROLL
+    CTEXT           "H",IDC_STATIC,97,46,14,8
+    EDITTEXT        IDC_REG_H,97,57,14,12,ES_UPPERCASE | ES_AUTOHSCROLL
+    CTEXT           "L",IDC_STATIC,114,46,14,8
+    EDITTEXT        IDC_REG_L,114,57,14,12,ES_UPPERCASE | ES_AUTOHSCROLL
+    CTEXT           "S",IDC_STATIC,7,72,14,8
+    CONTROL         "",IDC_FLAG_SF,"Button",BS_AUTOCHECKBOX | BS_CENTER | WS_TABSTOP,9,82,14,10
+    CTEXT           "Z",IDC_STATIC,22,72,14,8
+    CONTROL         "",IDC_FLAG_ZF,"Button",BS_AUTOCHECKBOX | BS_CENTER | WS_TABSTOP,24,82,14,10
+    CTEXT           "Y",IDC_STATIC,37,72,14,8
+    CONTROL         "",IDC_FLAG_YF,"Button",BS_AUTOCHECKBOX | BS_CENTER | WS_TABSTOP,39,82,14,10
+    CTEXT           "H",IDC_STATIC,52,72,14,8
+    CONTROL         "",IDC_FLAG_HF,"Button",BS_AUTOCHECKBOX | BS_CENTER | WS_TABSTOP,54,82,14,10
+    CTEXT           "X",IDC_STATIC,67,72,14,8
+    CONTROL         "",IDC_FLAG_XF,"Button",BS_AUTOCHECKBOX | BS_CENTER | WS_TABSTOP,69,82,14,10
+    CTEXT           "P",IDC_STATIC,82,72,14,8
+    CONTROL         "",IDC_FLAG_PF,"Button",BS_AUTOCHECKBOX | BS_CENTER | WS_TABSTOP,84,82,14,10
+    CTEXT           "N",IDC_STATIC,97,72,14,8
+    CONTROL         "",IDC_FLAG_NF,"Button",BS_AUTOCHECKBOX | BS_CENTER | WS_TABSTOP,99,82,14,10
+    CTEXT           "C",IDC_STATIC,114,72,14,8
+    CONTROL         "",IDC_FLAG_CF,"Button",BS_AUTOCHECKBOX | BS_CENTER | WS_TABSTOP,114,82,14,10
+    CTEXT           "A'",IDC_STATIC,7,98,14,8
+    EDITTEXT        IDC_REG_A_,7,109,14,12,ES_UPPERCASE | ES_AUTOHSCROLL
+    CTEXT           "F'",IDC_STATIC,22,98,14,8
+    EDITTEXT        IDC_REG_F_,22,109,14,12,ES_UPPERCASE | ES_AUTOHSCROLL
+    CTEXT           "B'",IDC_STATIC,37,98,14,8
+    EDITTEXT        IDC_REG_B_,37,109,14,12,ES_UPPERCASE | ES_AUTOHSCROLL
+    CTEXT           "C'",IDC_STATIC,52,98,14,8
+    EDITTEXT        IDC_REG_C_,52,109,14,12,ES_UPPERCASE | ES_AUTOHSCROLL
+    CTEXT           "D'",IDC_STATIC,67,98,14,8
+    EDITTEXT        IDC_REG_D_,67,109,14,12,ES_UPPERCASE | ES_AUTOHSCROLL
+    CTEXT           "E'",IDC_STATIC,82,98,14,8
+    EDITTEXT        IDC_REG_E_,82,109,14,12,ES_UPPERCASE | ES_AUTOHSCROLL
+    CTEXT           "H'",IDC_STATIC,97,98,14,8
+    EDITTEXT        IDC_REG_H_,97,109,14,12,ES_UPPERCASE | ES_AUTOHSCROLL
+    CTEXT           "L'",IDC_STATIC,114,98,14,8
+    EDITTEXT        IDC_REG_L_,114,109,14,12,ES_UPPERCASE | ES_AUTOHSCROLL
+    CTEXT           "S'",IDC_STATIC,7,125,14,8
+    CONTROL         "",IDC_FLAG_SF_,"Button",BS_AUTOCHECKBOX | BS_CENTER | WS_TABSTOP,9,135,14,10
+    CTEXT           "Z'",IDC_STATIC,22,125,14,8
+    CONTROL         "",IDC_FLAG_ZF_,"Button",BS_AUTOCHECKBOX | BS_CENTER | WS_TABSTOP,24,135,14,10
+    CTEXT           "Y'",IDC_STATIC,37,125,14,8
+    CONTROL         "",IDC_FLAG_YF_,"Button",BS_AUTOCHECKBOX | BS_CENTER | WS_TABSTOP,39,135,14,10
+    CTEXT           "H'",IDC_STATIC,52,125,14,8
+    CONTROL         "",IDC_FLAG_HF_,"Button",BS_AUTOCHECKBOX | BS_CENTER | WS_TABSTOP,54,135,14,10
+    CTEXT           "X'",IDC_STATIC,67,125,14,8
+    CONTROL         "",IDC_FLAG_XF_,"Button",BS_AUTOCHECKBOX | BS_CENTER | WS_TABSTOP,69,135,14,10
+    CTEXT           "P'",IDC_STATIC,82,125,14,8
+    CONTROL         "",IDC_FLAG_PF_,"Button",BS_AUTOCHECKBOX | BS_CENTER | WS_TABSTOP,84,135,14,10
+    CTEXT           "N'",IDC_STATIC,97,125,14,8
+    CONTROL         "",IDC_FLAG_NF_,"Button",BS_AUTOCHECKBOX | BS_CENTER | WS_TABSTOP,99,135,14,10
+    CTEXT           "C'",IDC_STATIC,114,125,14,8
+    CONTROL         "",IDC_FLAG_CF_,"Button",BS_AUTOCHECKBOX | BS_CENTER | WS_TABSTOP,114,135,14,10
+    CTEXT           "PC",IDC_STATIC,15,149,23,8
+    EDITTEXT        IDC_REG_PC,15,157,23,14,ES_UPPERCASE | ES_AUTOHSCROLL
+    CTEXT           "SP",IDC_STATIC,40,149,23,8
+    EDITTEXT        IDC_REG_SP,40,157,23,14,ES_UPPERCASE | ES_AUTOHSCROLL
+    CTEXT           "IX",IDC_STATIC,65,149,23,8
+    EDITTEXT        IDC_REG_IX,65,157,23,14,ES_UPPERCASE | ES_AUTOHSCROLL
+    CTEXT           "IY",IDC_STATIC,90,149,23,8
+    EDITTEXT        IDC_REG_IY,89,157,23,14,ES_UPPERCASE | ES_AUTOHSCROLL
+    EDITTEXT        IDC_CMD,15,176,96,14,ES_READONLY
+    DEFPUSHBUTTON   "&Apply",IDOK,78,196,50,14
+    PUSHBUTTON      "Step Over",IDC_STEP_OVER,48,7,37,14
+    PUSHBUTTON      "Step Out",IDC_STEP_OUT,91,7,37,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_REGISTERS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 128
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 210
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_REGISTERS AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MAIN MENU
+BEGIN
+    POPUP "&Machine"
+    BEGIN
+        MENUITEM "E&xit",                       ID_FILE_EXIT
+    END
+    POPUP "&Debug"
+    BEGIN
+        MENUITEM "&Run",                        ID_DEBUG_RUN
+        MENUITEM "&Break",                      ID_DEBUG_BREAK
+        MENUITEM "&Step",                       ID_DEBUG_STEP
+        MENUITEM "Step &Over",                  ID_DEBUG_STEPOVER
+        MENUITEM "Step Ou&t",                   ID_DEBUG_STEPOUT
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Registers",                  ID_VIEW_REGISTERS
+        MENUITEM "&Memory",                     ID_VIEW_MEMORY
+        MENUITEM "&Breakpoints",                ID_VIEW_BREAKPOINTS
+        MENUITEM "&Dissassembly",               ID_VIEW_DISASSEMBLY
+        MENUITEM "&Output",                     ID_VIEW_OUTPUT
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_MAIN ACCELERATORS
+BEGIN
+    VK_F11,         ID_DEBUG_STEP,          VIRTKEY, NOINVERT
+    VK_F11,         ID_DEBUG_STEPOUT,       VIRTKEY, SHIFT, NOINVERT
+    VK_F10,         ID_DEBUG_STEPOVER,      VIRTKEY, NOINVERT
+    VK_F5,          ID_DEBUG_RUN,           VIRTKEY, NOINVERT
+END
+
+#endif    // English (United Kingdom) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
