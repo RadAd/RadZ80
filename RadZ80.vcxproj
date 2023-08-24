@@ -66,7 +66,7 @@
       <SubSystem>Windows</SubSystem>
     </Link>
     <PreBuildEvent>
-      <Command>if defined VSAPPIDDIR set GIT="%VSAPPIDDIR%CommonExtensions\Microsoft\TeamFoundation\Team Explorer\Git\cmd\git.exe"
+      <Command Condition="'$(APPVEYOR)' == ''">if defined VSAPPIDDIR set GIT="%VSAPPIDDIR%CommonExtensions\Microsoft\TeamFoundation\Team Explorer\Git\cmd\git.exe"
 where git &gt; NUL &amp;&amp; set GIT=git &gt; NUL
 if exist Z80 (
 if not exist Z80.patch.applied (
