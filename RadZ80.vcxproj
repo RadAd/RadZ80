@@ -84,7 +84,9 @@
       <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Comctl32.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">set GIT="%VSAPPIDDIR%CommonExtensions\Microsoft\TeamFoundation\Team Explorer\Git\cmd\git.exe"
+      <Command>if defined VSAPPIDDIR set GIT="%VSAPPIDDIR%CommonExtensions\Microsoft\TeamFoundation\Team Explorer\Git\cmd\git.exe"
+where git &gt; NUL &amp;&amp; set GIT=git &gt; NUL
+echo GIT %GIT%
 if exist Z80 (
 if not exist Z80.patch.applied (
   cd Z80
@@ -93,24 +95,6 @@ if not exist Z80.patch.applied (
 )
 </Command>
     </PreBuildEvent>
-    <PreBuildEvent>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">set GIT="%VSAPPIDDIR%CommonExtensions\Microsoft\TeamFoundation\Team Explorer\Git\cmd\git.exe"
-if exist Z80 (
-if not exist Z80.patch.applied (
-  cd Z80
-  %GIT% apply ..\Z80.patch &amp;&amp; (echo %DATE% %TIME%&gt;..\Z80.patch.applied)
-)
-)
-</Command>
-    </PreBuildEvent>
-    <PreLinkEvent>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-      </Command>
-    </PreLinkEvent>
-    <PreLinkEvent>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </Command>
-    </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
     <ClCompile>
@@ -128,34 +112,6 @@ if not exist Z80.patch.applied (
       <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Comctl32.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Comctl32.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PreBuildEvent>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">set GIT="%VSAPPIDDIR%CommonExtensions\Microsoft\TeamFoundation\Team Explorer\Git\cmd\git.exe"
-if exist Z80 (
-if not exist Z80.patch.applied (
-  cd Z80
-  %GIT% apply ..\Z80.patch &amp;&amp; (echo %DATE% %TIME%&gt;..\Z80.patch.applied)
-)
-)
-</Command>
-    </PreBuildEvent>
-    <PreBuildEvent>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">set GIT="%VSAPPIDDIR%CommonExtensions\Microsoft\TeamFoundation\Team Explorer\Git\cmd\git.exe"
-if exist Z80 (
-if not exist Z80.patch.applied (
-  cd Z80
-  %GIT% apply ..\Z80.patch &amp;&amp; (echo %DATE% %TIME%&gt;..\Z80.patch.applied)
-)
-)
-</Command>
-    </PreBuildEvent>
-    <PreLinkEvent>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-      </Command>
-    </PreLinkEvent>
-    <PreLinkEvent>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-      </Command>
-    </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\BreakpointWnd.cpp" />
