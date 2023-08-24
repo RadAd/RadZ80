@@ -98,8 +98,8 @@ LRESULT CALLBACK TerminalWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
         }
 
         EndPaint(hWnd, &ps);
-        _ASSERT_EQUAL(gdirescount, GetGuiResources(GetCurrentProcess(), GR_GDIOBJECTS));
-        _ASSERT_EQUAL(userrescount, GetGuiResources(GetCurrentProcess(), GR_USEROBJECTS));
+        ASSERT_EQUAL(gdirescount, GetGuiResources(GetCurrentProcess(), GR_GDIOBJECTS));
+        ASSERT_EQUAL(userrescount, GetGuiResources(GetCurrentProcess(), GR_USEROBJECTS));
 
         return 0;
     }
