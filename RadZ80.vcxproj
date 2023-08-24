@@ -86,10 +86,11 @@
     <PreBuildEvent>
       <Command>if defined VSAPPIDDIR set GIT="%VSAPPIDDIR%CommonExtensions\Microsoft\TeamFoundation\Team Explorer\Git\cmd\git.exe"
 where git &gt; NUL &amp;&amp; set GIT=git &gt; NUL
-echo GIT %GIT%
+rem echo GIT %GIT%
 if exist Z80 (
 if not exist Z80.patch.applied (
   cd Z80
+  echo Applying Z80.patch
   %GIT% apply ..\Z80.patch &amp;&amp; (echo %DATE% %TIME%&gt;..\Z80.patch.applied)
 )
 )
