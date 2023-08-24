@@ -47,5 +47,13 @@
     <Filter Include="Z80DisAssembler">
       <UniqueIdentifier>{fa6bad39-e117-4016-aaad-b9c3cb2d0516}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Examples">
+      <UniqueIdentifier>{dbcd71a7-65ee-444c-b077-b865a0004e41}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="examples\helloworld.asm">
+      <Filter>Examples</Filter>
+    </None>
   </ItemGroup>
 </Project>
