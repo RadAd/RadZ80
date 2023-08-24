@@ -65,6 +65,17 @@
     <Link>
       <SubSystem>Windows</SubSystem>
     </Link>
+    <PreBuildEvent>
+      <Command>if defined VSAPPIDDIR set GIT="%VSAPPIDDIR%CommonExtensions\Microsoft\TeamFoundation\Team Explorer\Git\cmd\git.exe"
+where git &gt; NUL &amp;&amp; set GIT=git &gt; NUL
+if exist Z80 (
+if not exist Z80.patch.applied (
+  echo Applying Z80.patch
+  %GIT% -C Z80 apply ..\Z80.patch &amp;&amp; (echo %DATE% %TIME%&gt;Z80.patch.applied)
+)
+)
+</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Platform)'=='Win32'">
     <ClCompile>
@@ -83,21 +94,6 @@
       <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Comctl32.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Comctl32.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PreBuildEvent>
-      <Command>if defined VSAPPIDDIR set GIT="%VSAPPIDDIR%CommonExtensions\Microsoft\TeamFoundation\Team Explorer\Git\cmd\git.exe"
-where git &gt; NUL &amp;&amp; set GIT=git &gt; NUL
-rem echo GIT %GIT%
-echo CD %CD%
-dir
-if exist Z80 (
-if not exist Z80.patch.applied (
-  cd Z80
-  echo Applying Z80.patch
-  %GIT% apply ..\Z80.patch &amp;&amp; (echo %DATE% %TIME%&gt;..\Z80.patch.applied)
-)
-)
-</Command>
-    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
     <ClCompile>
@@ -150,7 +146,16 @@ if not exist Z80.patch.applied (
   <ItemGroup>
     <ResourceCompile Include="src\RadZ80.rc" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="examples\helloworld.asm" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
+  <Target Name="GetZmac">
+    <DownloadFile SourceUrl="http://48k.ca/zmac.zip" DestinationFolder="$(MSBuildProjectDirectory)">
+      <Output TaskParameter="DownloadedFile" ItemName="Content" />
+    </DownloadFile>
+    <Unzip SourceFiles="zmac.zip" DestinationFolder="$(MSBuildProjectDirectory)\zmac" OverwriteReadOnlyFiles="true" />
+  </Target>
 </Project>
