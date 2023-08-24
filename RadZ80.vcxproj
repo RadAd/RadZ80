@@ -56,7 +56,7 @@
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
-  <PropertyGroup  Condition="'$(APPVEYOR)' == ''">
+  <PropertyGroup Condition="'$(APPVEYOR)' == ''">
     <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
   </PropertyGroup>
   <ItemDefinitionGroup>
@@ -79,13 +79,13 @@ if not exist Z80.patch.applied (
 )
 </Command>
     </PreBuildEvent>
-    <CustomBuildStep>
-      <Command  Condition="'$(APPVEYOR)' == ''">for %%f in (examples\*.asm) do (
+    <CustomBuildStep Condition="'$(APPVEYOR)' == ''">
+      <Command>for %%f in (examples\*.asm) do (
   echo Compiling %%f
   zmac\zmac --oo cmd,lst %%f
 )
 </Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">zout\*.cmd</Outputs>
+      <Outputs>zout\*.cmd</Outputs>
     </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Platform)'=='Win32'">
