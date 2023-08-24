@@ -87,6 +87,8 @@
       <Command>if defined VSAPPIDDIR set GIT="%VSAPPIDDIR%CommonExtensions\Microsoft\TeamFoundation\Team Explorer\Git\cmd\git.exe"
 where git &gt; NUL &amp;&amp; set GIT=git &gt; NUL
 rem echo GIT %GIT%
+echo CD %CD%
+dir
 if exist Z80 (
 if not exist Z80.patch.applied (
   cd Z80
