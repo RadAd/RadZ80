@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="src\BreakpointWnd.cpp" />
+    <ClCompile Include="src\DisassemblyWnd.cpp" />
+    <ClCompile Include="src\EditPlus.c" />
+    <ClCompile Include="src\ListViewPlus.c" />
+    <ClCompile Include="src\Machine.cpp" />
+    <ClCompile Include="src\RegistersDlg.cpp" />
+    <ClCompile Include="src\MemWnd.cpp" />
+    <ClCompile Include="src\RadZ80.cpp" />
+    <ClCompile Include="src\TerminalWnd.cpp" />
+    <ClCompile Include="src\WindowMgr.cpp" />
+    <ClCompile Include="src\WindowsPlus.c" />
+    <ClCompile Include="Z80\sources\Z80.c">
+      <Filter>Z80</Filter>
+    </ClCompile>
+    <ClCompile Include="src\z80_disassembler.c">
+      <Filter>Z80DisAssembler</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\BreakpointWnd.h" />
+    <ClInclude Include="src\DisassemblyWnd.h" />
+    <ClInclude Include="src\EditPlus.h" />
+    <ClInclude Include="src\ListViewPlus.h" />
+    <ClInclude Include="src\ListViewVector.h" />
+    <ClInclude Include="src\Machine.h" />
+    <ClInclude Include="src\RegistersDlg.h" />
+    <ClInclude Include="src\MemWnd.h" />
+    <ClInclude Include="src\resource.h" />
+    <ClInclude Include="src\TerminalWnd.h" />
+    <ClInclude Include="src\Utils.h" />
+    <ClInclude Include="src\WindowMgr.h" />
+    <ClInclude Include="src\WindowsPlus.h" />
+    <ClInclude Include="Z80\API\Z80.h">
+      <Filter>Z80</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="src\RadZ80.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Z80">
+      <UniqueIdentifier>{bf4d1b6c-ea19-4d9a-bee1-3cf8fd6883fb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Z80DisAssembler">
+      <UniqueIdentifier>{fa6bad39-e117-4016-aaad-b9c3cb2d0516}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
