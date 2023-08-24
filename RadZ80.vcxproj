@@ -163,7 +163,7 @@ if not exist Z80.patch.applied (
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
-  <Target Name="GetZmac">
+  <Target Name="GetZmac" BeforeTargets="CustomBuild">
     <DownloadFile SourceUrl="http://48k.ca/zmac.zip" DestinationFolder="$(MSBuildProjectDirectory)">
       <Output TaskParameter="DownloadedFile" ItemName="Content" />
     </DownloadFile>
