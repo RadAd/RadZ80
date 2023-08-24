@@ -5,9 +5,7 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v2
-    - run: |
-        set _=%DATE%
-        echo DATE %DATE%
-        echo _ %_%
-        
+    - run: git tag %DATE:~10,4%.%DATE:~7,2%.%DATE:~4,2%
+      shell: cmd
+    - run: git push --tags
       shell: cmd
