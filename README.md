@@ -8,4 +8,6 @@ Z80 emulator
 
 ## Clone with Submodules
 
-```git clone --recurse-submodules https://github.com/RadAd/RadZ80.git```
+```
+git clone --recurse-submodules https://github.com/RadAd/RadZ80.git
+```
