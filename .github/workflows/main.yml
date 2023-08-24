@@ -2,8 +2,12 @@ name: add-date-tag
 on: [workflow_dispatch]
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
     - uses: actions/checkout@v2
-    - uses: mydea/action-tag-date-version@v20
-    - run: deploy-app
+    - run: |
+        set _=%DATE%
+        echo DATE %DATE%
+        echo _ %_%
+        
+      shell: cmd
