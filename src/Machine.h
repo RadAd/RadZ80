@@ -15,11 +15,42 @@
 
 #define WM_MEM_CHANGED (WM_USER + 111)
 #define WM_BREAKPOINT_CHANGED (WM_USER + 112)
+#define WM_REG_CHANGED (WM_USER + 113)
 
 #define COLOR_BP RGB(0xFF, 0x00, 0x00)
 #define COLOR_PC RGB(0x87, 0xCE, 0xEB)
 #define COLOR_SP RGB(0x3C, 0xB0, 0x43)
 #define COLOR_HL RGB(0xD6, 0xB8, 0x5A)
+
+enum class Reg8
+{
+    None,
+    A,
+    F,
+    B,
+    C,
+    D,
+    E,
+    H,
+    L,
+    A_,
+    F_,
+    B_,
+    C_,
+    D_,
+    E_,
+    H_,
+    L_,
+};
+
+enum class Reg16
+{
+    None = 0x100,
+    PC,
+    SP,
+    IX,
+    IY,
+};
 
 // From z80_disassembler.c
 extern "C" void Disassemble(const UINT8 * Opcodes, UINT16 adr, TCHAR * s);
@@ -66,6 +97,9 @@ public:
 
     void MemWrite(zuint16 address, zuint8 value, bool fromemulation);
 
+    void SendRegChanged(Reg8 reg) const { SendAllMessage(WM_REG_CHANGED, 0, (LPARAM) reg); }
+    void SendRegChanged(Reg16 reg) const { SendAllMessage(WM_REG_CHANGED, 0, (LPARAM) reg); }
+
     bool IsBreakPoint(zuint16 address) const { return breakpoint.find(address) != breakpoint.end(); }
     bool IsTempBreakPoint(zuint16 address) const { return tempbreakpoint.find(address) != tempbreakpoint.end(); }
     void ToggleBreakPoint(zuint16 address);
@@ -79,7 +113,7 @@ public:
     zuint16 breakonret;
 
 private:
-    void SendAllMessage(UINT Msg, WPARAM wParam = 0, LPARAM lParam = 0);
+    void SendAllMessage(UINT Msg, WPARAM wParam = 0, LPARAM lParam = 0) const;
 
     State s;
     std::thread runz80;
@@ -91,3 +125,39 @@ private:
     friend void RunZ80(Machine* m);
     friend void MachineWrite(void* context, zuint16 address, zuint8 value);
 };
+
+inline zuint8* GetRegU8(Reg8 reg, Machine* m)
+{
+    switch (reg)
+    {
+    case Reg8::A: return &Z80_A(m->cpu);
+    case Reg8::F: return &Z80_F(m->cpu);
+    case Reg8::B: return &Z80_B(m->cpu);
+    case Reg8::C: return &Z80_C(m->cpu);
+    case Reg8::D: return &Z80_D(m->cpu);
+    case Reg8::E: return &Z80_E(m->cpu);
+    case Reg8::H: return &Z80_H(m->cpu);
+    case Reg8::L: return &Z80_L(m->cpu);
+    case Reg8::A_: return &Z80_A_(m->cpu);
+    case Reg8::F_: return &Z80_F_(m->cpu);
+    case Reg8::B_: return &Z80_B_(m->cpu);
+    case Reg8::C_: return &Z80_C_(m->cpu);
+    case Reg8::D_: return &Z80_D_(m->cpu);
+    case Reg8::E_: return &Z80_E_(m->cpu);
+    case Reg8::H_: return &Z80_H_(m->cpu);
+    case Reg8::L_: return &Z80_L_(m->cpu);
+    default: return nullptr;
+    }
+}
+
+inline zuint16* GetRegU16(Reg16 reg, Machine* m)
+{
+    switch (reg)
+    {
+    case Reg16::PC: return &Z80_PC(m->cpu);
+    case Reg16::SP: return &Z80_SP(m->cpu);
+    case Reg16::IX: return &Z80_IX(m->cpu);
+    case Reg16::IY: return &Z80_IY(m->cpu);
+    default: return nullptr;
+    }
+}

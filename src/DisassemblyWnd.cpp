@@ -196,6 +196,19 @@ LRESULT CALLBACK DisassemblyWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
         return DefWindowProc(hWnd, message, wParam, lParam);
     }
 
+    case WM_REG_CHANGED:
+    {
+        if ((Reg16) lParam == Reg16::PC)
+        {
+            const HWND hWndListView = GetDlgItem(hWnd, LISTVIEW_ID);
+            const zuint addr = Z80_PC(m->cpu);
+            const int nItem = FindItem(hWndListView, addr);
+            if (nItem >= 0)
+                InvalidateItem(hWndListView, nItem);
+        }
+        return DefWindowProc(hWnd, message, wParam, lParam);
+    }
+
     case WM_SIZE:
     {
         const HWND hWndListView = GetDlgItem(hWnd, LISTVIEW_ID);

@@ -1,6 +1,6 @@
 #include "Machine.h"
 
-void Machine::SendAllMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
+void Machine::SendAllMessage(UINT Msg, WPARAM wParam, LPARAM lParam) const
 {
     for (HWND hWnd : hWnds)
         SendMessage(hWnd, Msg, wParam, lParam);

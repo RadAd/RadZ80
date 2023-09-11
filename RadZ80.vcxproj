@@ -82,7 +82,7 @@ if not exist Z80.patch.applied (
     <CustomBuildStep Condition="'$(APPVEYOR)' == ''">
       <Command>for %%f in (examples\*.asm) do (
   echo Compiling %%f
-  zmac\zmac --oo cmd,lst %%f
+  zmac\zmac --dotlocals --oo cmd,lst %%f
 )
 </Command>
       <Outputs>zout\*.cmd</Outputs>
@@ -163,10 +163,4 @@ if not exist Z80.patch.applied (
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
-  <Target Name="GetZmac" BeforeTargets="CustomBuild">
-    <DownloadFile SourceUrl="http://48k.ca/zmac.zip" DestinationFolder="$(MSBuildProjectDirectory)">
-      <Output TaskParameter="DownloadedFile" ItemName="Content" />
-    </DownloadFile>
-    <Unzip SourceFiles="zmac.zip" DestinationFolder="$(MSBuildProjectDirectory)\zmac" OverwriteReadOnlyFiles="true" />
-  </Target>
 </Project>

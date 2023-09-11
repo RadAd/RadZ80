@@ -12,6 +12,8 @@
 #include "TerminalWnd.h"
 #include "WindowMgr.h"
 
+HWND g_hWndDlg = NULL;
+
 zuint16 LoadCMD(LPCTSTR filename, zuint8* mem)
 {
     zuint16 pc = 0xFFFF;
@@ -96,7 +98,7 @@ int APIENTRY tWinMain(_In_ const HINSTANCE hInstance, _In_opt_ const HINSTANCE h
     BOOL bRet;
     while ((bRet = GetMessage(&msg, NULL, 0, 0)) > 0)
     {
-        if (!IsDialogMessage(hWndMain, &msg) && !TranslateAccelerator(hWndMain, g_hAccel, &msg))
+        if (!IsDialogMessage(g_hWndDlg, &msg) && !TranslateAccelerator(hWndMain, g_hAccel, &msg))
         {
             TranslateMessage(&msg);
             DispatchMessage(&msg);

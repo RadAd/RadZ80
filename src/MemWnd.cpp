@@ -253,6 +253,38 @@ LRESULT CALLBACK MemWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
         return 0;
     }
 
+    case WM_REG_CHANGED:
+    {
+        switch ((Reg16) lParam)
+        {
+        case Reg16::PC:
+        {
+            const HWND hWndListView = GetDlgItem(hWnd, LISTVIEW_ID);
+            const zuint addr = Z80_PC(data->m->cpu);
+            InvalidateAddress(hWndListView, addr);
+            break;
+        }
+        case Reg16::SP:
+        {
+            const HWND hWndListView = GetDlgItem(hWnd, LISTVIEW_ID);
+            const zuint addr = Z80_SP(data->m->cpu);
+            InvalidateAddress(hWndListView, addr);
+            break;
+        }
+        }
+        switch ((Reg8) lParam)
+        {
+        case Reg8::H: case Reg8::L:
+        {
+            const HWND hWndListView = GetDlgItem(hWnd, LISTVIEW_ID);
+            const zuint addr = Z80_HL(data->m->cpu);
+            InvalidateAddress(hWndListView, addr);
+            break;
+        }
+        }
+        return 0;
+    }
+
     case WM_UPDATE_STATE:
     case WM_CPU_STEP_START:
     case WM_CPU_STEP_STOP:

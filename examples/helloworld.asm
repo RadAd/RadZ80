@@ -1,5 +1,10 @@
+; TODO Use https://github.com/gp48k/zmac with --dotfiles extension
+
 	.ORG 	0100h
 
+    LD BC,10
+    LD DE,40
+    CALL multiply
 	LD HL,msg		; Address of line in HL
 	CALL printline	; Print hello world
 ;
@@ -12,44 +17,83 @@ printline:
 	LD A,(HL)		; Get char to print
 	CP 0			; Check terminator
 	RET Z
-;
-	OUT	(1),A		; Output char to terminal
 	CALL printchar
-	INC	HL 	   	; Next char
+	INC	HL			; Next char
 	JP	printline	; Loop
+
+SCREEN_REF		equ		$8000
+SCREEN_WIDTH	equ		40
+SCREEN_HIEGHT	equ		25
 
 ;
 ; ---------------------------------
 ; Routine to print out a char in (a) to terminal
 ; --------------------------------
 printchar:
-	PUSH bc
-	PUSH ix
-	PUSH a
-	LD ix, 0
-	LD bc, 40
-	LD a, (curs_y)
-	CP a
-printchar_2:
-	JR Z, printchar_1
-	ADD ix, bc
-	DEC a
-	JP printchar_2
-printchar_1:
-	POP a
-	LD bc, (curs_x)
-	ADD ix, bc
-	INC bc
-	LD (curs_x), bc
-	LD bc, $8000
-	ADD ix, bc
-	LD (ix), A
-	; TODO if curs_x >= 40 curs_x = 0; ++cursy
-	POP ix
-	POP bc
+	PUSH HL
+	CALL get_cursor_ref
+	LD (HL), A
+	CALL inc_cursor
+	POP HL
 	RET
 
-;-------------------
+; Load HL with cursor pos as a memory location
+; Uses BC, DE
+; return HL
+get_cursor_ref:
+	PUSH A
+	LD A, (curs_y)
+	LD B, 0
+	LD C, A
+	LD DE, SCREEN_WIDTH
+	CALL multiply
+	LD A, (curs_x)
+	LD B, 0
+	LD C, A
+	ADD HL, BC
+	LD BC, SCREEN_REF
+	ADD HL, BC
+	POP A
+	RET
+
+inc_cursor:
+; uses A
+	LD A, (curs_x)
+	INC A
+	CP SCREEN_WIDTH
+	JNZ .store
+	LD A, (curs_y)
+	INC A
+	LD (curs_y), A
+	LD A, 0
+.store:
+	LD (curs_x), A
+	RET
+
+
+; -------------------
+; Multiply HL = BC * DE
+; Uses HL, BC
+; Overflow in carry flag
+; -------------------
+multiply:
+	LD	hl, 0			; clear the result register
+.loop:
+	LD	a, b			; is BC == 0?
+	OR	c				;  (also resets carry flag)
+	RET z				; then we're done!
+	SRL	b				; logical right shift of BC
+	RR	c				; bit 0 goes to carry flag
+	JR	nc, .zerobit	; unless bit 0 was 0
+	ADD	hl, de			; add multiplier to result
+	RET	c				; return on overflow
+.zerobit:
+	SLA	e				; shift multiplier to the left
+	RL	d				; topmost bit goes to carry flag
+	RET	c				; return on overflow
+	JR	.loop			; next iteration
+
+; -------------------
 ; Data
 ; ------------------
 

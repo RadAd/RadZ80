@@ -11,40 +11,42 @@
 
 #include "WindowMgr.h"
 
+extern HWND g_hWndDlg;
+
 namespace {
-    zuint8* GetRegU8(int nIDDlgItem, Machine* m)
+    Reg8 GetRegU8(int nIDDlgItem)
     {
         switch (nIDDlgItem)
         {
-        case IDC_REG_A: return &Z80_A(m->cpu);
-        case IDC_REG_F: return &Z80_F(m->cpu);
-        case IDC_REG_B: return &Z80_B(m->cpu);
-        case IDC_REG_C: return &Z80_C(m->cpu);
-        case IDC_REG_D: return &Z80_D(m->cpu);
-        case IDC_REG_E: return &Z80_E(m->cpu);
-        case IDC_REG_H: return &Z80_H(m->cpu);
-        case IDC_REG_L: return &Z80_L(m->cpu);
-        case IDC_REG_A_: return &Z80_A_(m->cpu);
-        case IDC_REG_F_: return &Z80_F_(m->cpu);
-        case IDC_REG_B_: return &Z80_B_(m->cpu);
-        case IDC_REG_C_: return &Z80_C_(m->cpu);
-        case IDC_REG_D_: return &Z80_D_(m->cpu);
-        case IDC_REG_E_: return &Z80_E_(m->cpu);
-        case IDC_REG_H_: return &Z80_H_(m->cpu);
-        case IDC_REG_L_: return &Z80_L_(m->cpu);
-        default: return nullptr;
+        case IDC_REG_A: return Reg8::A;
+        case IDC_REG_F: return Reg8::F;
+        case IDC_REG_B: return Reg8::B;
+        case IDC_REG_C: return Reg8::C;
+        case IDC_REG_D: return Reg8::D;
+        case IDC_REG_E: return Reg8::E;
+        case IDC_REG_H: return Reg8::H;
+        case IDC_REG_L: return Reg8::L;
+        case IDC_REG_A_: return Reg8::A_;
+        case IDC_REG_F_: return Reg8::F_;
+        case IDC_REG_B_: return Reg8::B_;
+        case IDC_REG_C_: return Reg8::C_;
+        case IDC_REG_D_: return Reg8::D_;
+        case IDC_REG_E_: return Reg8::E_;
+        case IDC_REG_H_: return Reg8::H_;
+        case IDC_REG_L_: return Reg8::L_;
+        default: return Reg8::None;
         }
     }
 
-    zuint16* GetRegU16(int nIDDlgItem, Machine* m)
+    Reg16 GetRegU16(int nIDDlgItem)
     {
         switch (nIDDlgItem)
         {
-        case IDC_REG_PC: return &Z80_PC(m->cpu);
-        case IDC_REG_SP: return &Z80_SP(m->cpu);
-        case IDC_REG_IX: return &Z80_IX(m->cpu);
-        case IDC_REG_IY: return &Z80_IY(m->cpu);
-        default: return nullptr;
+        case IDC_REG_PC: return Reg16::PC;
+        case IDC_REG_SP: return Reg16::SP;
+        case IDC_REG_IX: return Reg16::IX;
+        case IDC_REG_IY: return Reg16::IY;
+        default: return Reg16::None;
         }
     }
 
@@ -83,21 +85,21 @@ namespace {
         SetDlgItemText(hWndDlg, IDC_CMD, cmd);
 
         for (int nIDDlgItem : { IDC_REG_A, IDC_REG_F, IDC_REG_B, IDC_REG_C, IDC_REG_D, IDC_REG_E, IDC_REG_H, IDC_REG_L })
-            SetDlgItemHexU8(hWndDlg, nIDDlgItem, *GetRegU8(nIDDlgItem, m));
+            SetDlgItemHexU8(hWndDlg, nIDDlgItem, *GetRegU8(GetRegU8(nIDDlgItem), m));
 
         const zuint8 regf = Z80_F(m->cpu);
         for (int nIDDlgItem : { IDC_FLAG_SF, IDC_FLAG_ZF, IDC_FLAG_YF, IDC_FLAG_HF, IDC_FLAG_XF, IDC_FLAG_PF, IDC_FLAG_NF, IDC_FLAG_CF })
             Button_SetCheck(GetDlgItem(hWndDlg, nIDDlgItem), regf & GetFlag(nIDDlgItem) ? BST_CHECKED : BST_UNCHECKED);
 
         for (int nIDDlgItem : { IDC_REG_A_, IDC_REG_F_, IDC_REG_B_, IDC_REG_C_, IDC_REG_D_, IDC_REG_E_, IDC_REG_H_, IDC_REG_L_ })
-            SetDlgItemHexU8(hWndDlg, nIDDlgItem, *GetRegU8(nIDDlgItem, m));
+            SetDlgItemHexU8(hWndDlg, nIDDlgItem, *GetRegU8(GetRegU8(nIDDlgItem), m));
 
         const zuint8 regf_ = Z80_F_(m->cpu);
         for (int nIDDlgItem : { IDC_FLAG_SF_, IDC_FLAG_ZF_, IDC_FLAG_YF_, IDC_FLAG_HF_, IDC_FLAG_XF_, IDC_FLAG_PF_, IDC_FLAG_NF_, IDC_FLAG_CF_ })
             Button_SetCheck(GetDlgItem(hWndDlg, nIDDlgItem), regf_ & GetFlag(nIDDlgItem) ? BST_CHECKED : BST_UNCHECKED);
 
         for (int nIDDlgItem : { IDC_REG_PC, IDC_REG_SP, IDC_REG_IX, IDC_REG_IY })
-            SetDlgItemHexU16(hWndDlg, nIDDlgItem, *GetRegU16(nIDDlgItem, m));
+            SetDlgItemHexU16(hWndDlg, nIDDlgItem, *GetRegU16(GetRegU16(nIDDlgItem), m));
     }
 }
 
@@ -153,6 +155,13 @@ INT_PTR CALLBACK DlgRegistersProc(HWND hWndDlg, UINT message, WPARAM wParam, LPA
         return TRUE;
     }
 
+    case WM_ACTIVATE:
+        if (LOWORD(wParam))
+            g_hWndDlg = hWndDlg;
+        else if (g_hWndDlg == hWndDlg)
+            g_hWndDlg = NULL;
+        break;
+
     case WM_UPDATE_STATE:
         //case WM_CPU_STEP_START:
     case WM_CPU_STEP_STOP:
@@ -205,13 +214,25 @@ INT_PTR CALLBACK DlgRegistersProc(HWND hWndDlg, UINT message, WPARAM wParam, LPA
             {
             case IDC_REG_A: case IDC_REG_F: case IDC_REG_B: case IDC_REG_C: case IDC_REG_D: case IDC_REG_E: case IDC_REG_H: case IDC_REG_L:
             case IDC_REG_A_: case IDC_REG_F_: case IDC_REG_B_: case IDC_REG_C_: case IDC_REG_D_: case IDC_REG_E_: case IDC_REG_H_: case IDC_REG_L_:
-                *GetRegU8(nIDDlgItem, m) = GetDlgItemHexU8(hWndDlg, nIDDlgItem);
-                SetDlgItemHexU8(hWndDlg, nIDDlgItem, *GetRegU8(nIDDlgItem, m));
+            {
+                const Reg8 reg = GetRegU8(nIDDlgItem);
+                zuint8* val = GetRegU8(reg, m);
+                m->SendRegChanged(reg); // Before
+                *val = GetDlgItemHexU8(hWndDlg, nIDDlgItem);
+                SetDlgItemHexU8(hWndDlg, nIDDlgItem, *val);
+                m->SendRegChanged(reg); // After
                 break;
+            }
             case IDC_REG_PC: case IDC_REG_SP: case IDC_REG_IX: case IDC_REG_IY:
-                *GetRegU16(nIDDlgItem, m) = GetDlgItemHexU16(hWndDlg, nIDDlgItem);
-                SetDlgItemHexU16(hWndDlg, nIDDlgItem, *GetRegU16(nIDDlgItem, m));
+            {
+                const Reg16 reg = GetRegU16(nIDDlgItem);
+                zuint16* val = GetRegU16(reg, m);
+                m->SendRegChanged(reg); // Before
+                *val = GetDlgItemHexU16(hWndDlg, nIDDlgItem);
+                SetDlgItemHexU16(hWndDlg, nIDDlgItem, *val);
+                m->SendRegChanged(reg); // After
                 break;
+            }
             }
         }
         break;
@@ -221,9 +242,15 @@ INT_PTR CALLBACK DlgRegistersProc(HWND hWndDlg, UINT message, WPARAM wParam, LPA
             switch (HIWORD(wParam))
             {
             case EN_KILLFOCUS:
-                *GetRegU8(nIDDlgItem, m) = GetDlgItemHexU8(hWndDlg, nIDDlgItem);
-                SetDlgItemHexU8(hWndDlg, nIDDlgItem, *GetRegU8(nIDDlgItem, m));
+            {
+                const Reg8 reg = GetRegU8(nIDDlgItem);
+                zuint8* val = GetRegU8(reg, m);
+                m->SendRegChanged(reg); // Before
+                *val = GetDlgItemHexU8(hWndDlg, nIDDlgItem);
+                SetDlgItemHexU8(hWndDlg, nIDDlgItem, *val);
+                m->SendRegChanged(reg); // After
                 break;
+            }
             }
             break;
 
@@ -231,9 +258,15 @@ INT_PTR CALLBACK DlgRegistersProc(HWND hWndDlg, UINT message, WPARAM wParam, LPA
             switch (HIWORD(wParam))
             {
             case EN_KILLFOCUS:
-                *GetRegU16(nIDDlgItem, m) = GetDlgItemHexU16(hWndDlg, nIDDlgItem);
-                SetDlgItemHexU16(hWndDlg, nIDDlgItem, *GetRegU16(nIDDlgItem, m));
+            {
+                const Reg16 reg = GetRegU16(nIDDlgItem);
+                zuint16* val = GetRegU16(reg, m);
+                m->SendRegChanged(reg); // Before
+                *val = GetDlgItemHexU16(hWndDlg, nIDDlgItem);
+                SetDlgItemHexU16(hWndDlg, nIDDlgItem, *val);
+                m->SendRegChanged(reg); // After
                 break;
+            }
             }
             break;
         }
