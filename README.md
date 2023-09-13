@@ -11,3 +11,9 @@ Z80 emulator
 ```
 git clone --recurse-submodules https://github.com/RadAd/RadZ80.git
 ```
+
+## Install zmac
+
+```
+MSBuild zmac.vcxproj /t:Update
+```
