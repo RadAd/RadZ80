@@ -117,23 +117,42 @@ INT_PTR CALLBACK DlgRegistersProc(HWND hWndDlg, UINT message, WPARAM wParam, LPA
         SetWindowLongPtr(hWndDlg, GWLP_USERDATA, LONG_PTR(m));
         m->Register(hWndDlg);
 
+        HWND hWndTip = CreateWindowEx(NULL, TOOLTIPS_CLASS, NULL,
+            WS_POPUP | TTS_ALWAYSTIP,
+            CW_USEDEFAULT, CW_USEDEFAULT,
+            CW_USEDEFAULT, CW_USEDEFAULT,
+            hWndDlg, NULL,
+            NULL, NULL);
+
+        TOOLINFO toolInfo = { 0 };
+        toolInfo.cbSize = TTTOOLINFO_V1_SIZE;// sizeof(TOOLINFO);
+        toolInfo.hwnd = hWndDlg;
+        toolInfo.uFlags = TTF_IDISHWND | TTF_SUBCLASS;  // TODO Look into using id instead of hWnd
+        toolInfo.lpszText = LPSTR_TEXTCALLBACK;
+
         for (int nIDDlgItem : { IDC_REG_A, IDC_REG_F, IDC_REG_B, IDC_REG_C, IDC_REG_D, IDC_REG_E, IDC_REG_H, IDC_REG_L })
         {
             const HWND hWndEdit = GetDlgItem(hWndDlg, nIDDlgItem);
             Edit_LimitText(hWndEdit, 2);
             SetWindowSubclass(hWndEdit, EditHexChar, 0, 0);
+            toolInfo.uId = (UINT_PTR) hWndEdit;
+            SendMessage(hWndTip, TTM_ADDTOOL, 0, (LPARAM) &toolInfo);
         }
         for (int nIDDlgItem : { IDC_REG_A_, IDC_REG_F_, IDC_REG_B_, IDC_REG_C_, IDC_REG_D_, IDC_REG_E_, IDC_REG_H_, IDC_REG_L_ })
         {
             const HWND hWndEdit = GetDlgItem(hWndDlg, nIDDlgItem);
             Edit_LimitText(hWndEdit, 2);
             SetWindowSubclass(hWndEdit, EditHexChar, 0, 0);
+            toolInfo.uId = (UINT_PTR) hWndEdit;
+            SendMessage(hWndTip, TTM_ADDTOOL, 0, (LPARAM) &toolInfo);
         }
         for (int nIDDlgItem : { IDC_REG_PC, IDC_REG_SP, IDC_REG_IX, IDC_REG_IY })
         {
             const HWND hWndEdit = GetDlgItem(hWndDlg, nIDDlgItem);
             Edit_LimitText(hWndEdit, 4);
             SetWindowSubclass(hWndEdit, EditHexChar, 0, 0);
+            toolInfo.uId = (UINT_PTR) hWndEdit;
+            SendMessage(hWndTip, TTM_ADDTOOL, 0, (LPARAM) &toolInfo);
         }
         SendMessage(hWndDlg, WM_UPDATE_STATE, 0, 0);
         //SetDlgItemText(hWndDlg, IDC_RUN, TEXT("\u23F5"));
@@ -160,7 +179,7 @@ INT_PTR CALLBACK DlgRegistersProc(HWND hWndDlg, UINT message, WPARAM wParam, LPA
             g_hWndDlg = hWndDlg;
         else if (g_hWndDlg == hWndDlg)
             g_hWndDlg = NULL;
-        break;
+        return TRUE;;
 
     case WM_UPDATE_STATE:
         //case WM_CPU_STEP_START:
@@ -269,6 +288,38 @@ INT_PTR CALLBACK DlgRegistersProc(HWND hWndDlg, UINT message, WPARAM wParam, LPA
             }
             }
             break;
+        }
+        return TRUE;
+    }
+
+    case WM_NOTIFY:
+    {
+        LPNMHDR pNmHdr = (LPNMHDR) lParam;
+        switch (pNmHdr->code)
+        {
+        case TTN_GETDISPINFO:
+        {
+            auto lpNmtdi = (LPNMTTDISPINFO) lParam;
+            _ASSERT(lpNmtdi->uFlags & TTF_IDISHWND);
+            const HWND hEdit = (HWND) lpNmtdi->hdr.idFrom;
+            switch (GetWindowID(hEdit))
+            {
+            case IDC_REG_A: case IDC_REG_F: case IDC_REG_B: case IDC_REG_C: case IDC_REG_D: case IDC_REG_E: case IDC_REG_H: case IDC_REG_L:
+            case IDC_REG_A_: case IDC_REG_F_: case IDC_REG_B_: case IDC_REG_C_: case IDC_REG_D_: case IDC_REG_E_: case IDC_REG_H_: case IDC_REG_L_:
+            {
+                const zuint8 val = GetDlgItemHexU8(hWndDlg, GetWindowID(hEdit));
+                StringCchPrintf(lpNmtdi->szText, ARRAYSIZE(lpNmtdi->szText), TEXT("Dec: %d"), val);
+                break;
+            }
+            case IDC_REG_PC: case IDC_REG_SP: case IDC_REG_IX: case IDC_REG_IY:
+            {
+                const zuint16 val = GetDlgItemHexU16(hWndDlg, GetWindowID(hEdit));
+                StringCchPrintf(lpNmtdi->szText, ARRAYSIZE(lpNmtdi->szText), TEXT("Dec: %d"), val);
+                break;
+            }
+            }
+            break;
+        }
         }
         return TRUE;
     }
