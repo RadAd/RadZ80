@@ -2,10 +2,15 @@
 
 	.ORG 	0100h
 
-    LD BC,10
-    LD DE,40
+loop:
+	CALL readchar
+	CALL printchar
+	JP loop
+
+    LD BC, 10
+    LD DE, 40
     CALL multiply
-	LD HL,msg		; Address of line in HL
+	LD HL, msg		; Address of line in HL
 	CALL printline	; Print hello world
 ;
 	HALT			; Stop the program
@@ -14,7 +19,7 @@
 ; Print out a line in (hl)
 ; --------------------------------
 printline:
-	LD A,(HL)		; Get char to print
+	LD A, (HL)		; Get char to print
 	CP 0			; Check terminator
 	RET Z
 	CALL printchar
@@ -23,7 +28,48 @@ printline:
 
 SCREEN_REF		equ		$8000
 SCREEN_WIDTH	equ		40
-SCREEN_HIEGHT	equ		25
+SCREEN_HEEGHT	equ		25
+
+KEYB_READ		equ		$FF20
+KEYB_WRITE		equ		$FF21
+KEYB_BUFFER		equ		$FF00
+
+; Uses
+; BC
+add8to16q macro r16, r8
+	LD B, 0
+	LD C, r8
+	ADD r16, BC
+endm
+; Saves
+; BC
+add8to16 macro r16, r8
+	PUSH BC
+	add8to16q r16, r8
+	POP BC
+endm
+
+; ---------------------------------
+; Waits until character is ready
+; Return
+; A - character read
+; Uses
+; HL
+; Saves
+; BC
+readchar:
+	LD A, (KEYB_READ)
+.loop:
+	LD HL, KEYB_WRITE
+	CP (HL)
+	JZ .loop
+	LD HL, KEYB_BUFFER
+	add8to16 HL, A
+	INC A
+	AND A, $0F
+	LD (KEYB_READ), A
+	LD A, (HL)
+	RET
 
 ;
 ; ---------------------------------
