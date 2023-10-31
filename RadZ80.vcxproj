@@ -70,7 +70,7 @@
     </Link>
     <PreBuildEvent>
       <Command Condition="'$(APPVEYOR)' == ''">if defined VSAPPIDDIR set GIT="%VSAPPIDDIR%CommonExtensions\Microsoft\TeamFoundation\Team Explorer\Git\cmd\git.exe"
-where git &gt; NUL &amp;&amp; set GIT=git &gt; NUL
+rem where git &gt; NUL 2&gt;&amp;1 &amp;&amp; set GIT=git &gt; NUL
 if exist Z80 (
 if not exist Z80.patch.applied (
   echo Applying Z80.patch
@@ -80,10 +80,10 @@ if not exist Z80.patch.applied (
 </Command>
     </PreBuildEvent>
     <CustomBuildStep Condition="'$(APPVEYOR)' == ''">
-      <Command>for %%f in (examples\*.asm) do (
+      <Command>if exist zmac ( for %%f in (examples\*.asm) do (
   echo Compiling %%f
   zmac\zmac --dotlocals --oo cmd,lst %%f
-)
+) )
 </Command>
       <Outputs>zout\*.cmd</Outputs>
     </CustomBuildStep>

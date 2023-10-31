@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Update" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <Target Name="Download" Outputs="zmac.zip">
+    <DownloadFile
+            SourceUrl="http://48k.ca/zmac.zip"
+            DestinationFolder="$(MSBuildProjectDirectory)">
+      <Output TaskParameter="DownloadedFile" ItemName="Content" />
+    </DownloadFile>
+  </Target>
+
+  <Target Name="Extract" Inputs="zmac.zip" Outputs="zmac">
+    <Unzip
+            SourceFiles="zmac.zip"
+            DestinationFolder="$(MSBuildProjectDirectory)\zmac"
+            OverwriteReadOnlyFiles="true"
+      />
+  </Target>
+
+  <Target Name="Update" DependsOnTargets="Download;Extract">
+  </Target>
+</Project>
