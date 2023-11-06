@@ -61,12 +61,14 @@ int APIENTRY tWinMain(_In_ const HINSTANCE hInstance, _In_opt_ const HINSTANCE h
 
     const auto m = std::make_unique<Machine>();
 
+    bool loaded = false;
     zuint16 start = 0;
     for (int argi = 1; argi < __argc; ++argi)
     {
         const LPCTSTR arg = __targv[argi];
         {
             start = LoadCMD(arg, m->memory);
+            loaded = true;
         }
     }
     //m->breakpoint.insert(start + 0x02);
@@ -91,6 +93,9 @@ int APIENTRY tWinMain(_In_ const HINSTANCE hInstance, _In_opt_ const HINSTANCE h
         return 0;
     }
     ShowWindow(hWndMain, SW_SHOW);
+
+    if (!loaded)
+        MessageBox(hWndMain, TEXT("No program loaded"), TEXT("Rad Z80"), MB_OK | MB_ICONERROR);
 
     g_hAccel = LoadAccelerators(NULL, MAKEINTRESOURCE(IDR_MAIN));
 
