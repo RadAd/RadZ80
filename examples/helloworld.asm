@@ -3,8 +3,8 @@
 	.ORG 	0100h
 
 loop:
-	CALL readchar
-	CALL printchar
+	CALL editline
+	CALL newline
 	JP loop
 
     LD BC, 10
@@ -27,7 +27,7 @@ printline:
 	JP	printline	; Loop
 
 SCREEN_REF		equ		$8000
-SCREEN_WIDTH	equ		40
+SCREEN_WIDTH	equ		80
 SCREEN_HEEGHT	equ		25
 
 KEYB_READ		equ		$FF20
@@ -48,6 +48,40 @@ add8to16 macro r16, r8
 	add8to16q r16, r8
 	POP BC
 endm
+
+; ---------------------------------
+
+editline:
+	CALL readchar
+	CMP 13	; return
+	RET Z
+	CMP 8	; backspace
+	JZ .backspace
+	CALL printchar
+	JMP editline
+.backspace:
+	CALL backspace
+	JMP editline
+
+
+; ---------------------------------
+backspace:
+; Uses HL
+	CALL dec_cursor
+	CALL get_cursor_ref
+	LD (HL), 32
+	RET
+
+; ---------------------------------
+
+newline:
+; Uses A
+	LD A, (curs_y)
+	INC A
+	LD (curs_y), A
+	LD A, 0
+	LD (curs_x), A
+	RET
 
 ; ---------------------------------
 ; Waits until character is ready
@@ -84,6 +118,7 @@ printchar:
 	RET
 
 ; Load HL with cursor pos as a memory location
+; HL = SCREEN_REF + curs_y * SCREEN_WIDTH + curs_x
 ; Uses BC, DE
 ; return HL
 get_cursor_ref:
@@ -104,6 +139,12 @@ get_cursor_ref:
 
 inc_cursor:
 ; uses A
+; ++curs_x
+; if (curs_x == SCREEN_WIDTH)
+; {
+;   ++curs_y
+;   curs_x = 0
+; }
 	LD A, (curs_x)
 	INC A
 	CP SCREEN_WIDTH
@@ -116,6 +157,25 @@ inc_cursor:
 	LD (curs_x), A
 	RET
 
+dec_cursor:
+; uses A
+; if (curs_x == 0)
+; {
+;   --curs_y
+;   curs_x = SCREEN_WIDTH
+; }
+; --curs_x
+	LD A, (curs_x)
+	CP 0
+	JNZ .store
+	LD A, (curs_y)
+	DEC A
+	LD (curs_y), A
+	LD A, SCREEN_WIDTH
+.store:
+	DEC A
+	LD (curs_x), A
+	RET
 
 ; -------------------
 ; Multiply HL = BC * DE
