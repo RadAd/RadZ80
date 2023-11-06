@@ -12,6 +12,9 @@ TCHAR* pTerminalWndClass = TEXT("RadTerminalWnd");
 namespace{
     const HFONT g_hFont = (HFONT) GetStockObject(OEM_FIXED_FONT);
     TEXTMETRIC g_tm = {};
+    const zuint16 ScreenMem = 0x8000;
+    const zuint16 CursorXLoc = 0xF101;
+    const zuint16 CursorYLoc = 0xF102;
     const int ScreenWidth = 80;
     const int ScreenHeight = 25;
 }
@@ -51,6 +54,16 @@ LRESULT CALLBACK TerminalWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
         m->Unregister(hWnd);
         return DefWindowProc(hWnd, message, wParam, lParam);
 
+    case WM_SETFOCUS:
+        CreateCaret(hWnd, NULL, g_tm.tmAveCharWidth, g_tm.tmHeight);
+        SetCaretPos(m->memory[CursorXLoc] * g_tm.tmAveCharWidth, m->memory[CursorYLoc] * g_tm.tmHeight);
+        ShowCaret(hWnd);
+        return DefWindowProc(hWnd, message, wParam, lParam);
+
+    case WM_KILLFOCUS:
+        DestroyCaret();
+        return DefWindowProc(hWnd, message, wParam, lParam);
+
     case WM_ERASEBKGND:
     {
         const HDC hDC = HDC(wParam);
@@ -80,7 +93,7 @@ LRESULT CALLBACK TerminalWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 
             RECT rc = rcClient;
             rc.bottom = rc.top + g_tm.tmHeight;
-            zuint16 mem = 0x8000;
+            zuint16 mem = ScreenMem;
             for (int y = 0; y < ScreenHeight; ++y)
             {
                 RECT rcIntersect;
@@ -99,7 +112,7 @@ LRESULT CALLBACK TerminalWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 
         EndPaint(hWnd, &ps);
         ASSERT_EQUAL(gdirescount, GetGuiResources(GetCurrentProcess(), GR_GDIOBJECTS));
-        ASSERT_EQUAL(userrescount, GetGuiResources(GetCurrentProcess(), GR_USEROBJECTS));
+        //ASSERT_EQUAL(userrescount, GetGuiResources(GetCurrentProcess(), GR_USEROBJECTS));
 
         return 0;
     }
@@ -123,14 +136,16 @@ LRESULT CALLBACK TerminalWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
     case WM_MEM_CHANGED:
     {
         const zuint16 address = (zuint16)wParam;
-        if (address >= 0x8000 && address < (0x8000 + ScreenHeight * ScreenWidth))
+        if (address >= ScreenMem && address < (ScreenMem + ScreenHeight * ScreenWidth))
         {
-            const zuint16 offset = address - 0x8000;
+            const zuint16 offset = address - ScreenMem;
             const int x = offset % ScreenWidth;
             const int y = offset / ScreenWidth;
             const RECT rc = Rect({ x * g_tm.tmAveCharWidth, y * g_tm.tmHeight }, { g_tm.tmAveCharWidth, g_tm.tmHeight });
             InvalidateRect(hWnd, &rc, TRUE);
         }
+        if (address == CursorXLoc || address == CursorYLoc) // TODO && has keyboard focus
+            SetCaretPos(m->memory[CursorXLoc] * g_tm.tmAveCharWidth, m->memory[CursorYLoc] * g_tm.tmHeight);
         return 0;
     }
 

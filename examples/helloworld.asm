@@ -2,6 +2,9 @@
 
 	.ORG 	0100h
 
+	LD HL, msg
+	CALL printline
+
 loop:
 	CALL editline
 	CALL newline
@@ -28,7 +31,9 @@ printline:
 
 SCREEN_REF		equ		$8000
 SCREEN_WIDTH	equ		80
-SCREEN_HEEGHT	equ		25
+SCREEN_HEIGHT	equ		25
+SCREEN_CURSOR_X	equ		$F101
+SCREEN_CURSOR_Y	equ		$F102
 
 KEYB_READ		equ		$FF20
 KEYB_WRITE		equ		$FF21
@@ -76,11 +81,11 @@ backspace:
 
 newline:
 ; Uses A
-	LD A, (curs_y)
+	LD A, (SCREEN_CURSOR_Y)
 	INC A
-	LD (curs_y), A
+	LD (SCREEN_CURSOR_Y), A
 	LD A, 0
-	LD (curs_x), A
+	LD (SCREEN_CURSOR_X), A
 	RET
 
 ; ---------------------------------
@@ -110,6 +115,8 @@ readchar:
 ; Routine to print out a char in (a) to terminal
 ; --------------------------------
 printchar:
+	CMP 13	; return
+	JZ newline
 	PUSH HL
 	CALL get_cursor_ref
 	LD (HL), A
@@ -118,17 +125,17 @@ printchar:
 	RET
 
 ; Load HL with cursor pos as a memory location
-; HL = SCREEN_REF + curs_y * SCREEN_WIDTH + curs_x
+; HL = SCREEN_REF + SCREEN_CURSOR_Y * SCREEN_WIDTH + SCREEN_CURSOR_X
 ; Uses BC, DE
 ; return HL
 get_cursor_ref:
 	PUSH A
-	LD A, (curs_y)
+	LD A, (SCREEN_CURSOR_Y)
 	LD B, 0
 	LD C, A
 	LD DE, SCREEN_WIDTH
 	CALL multiply
-	LD A, (curs_x)
+	LD A, (SCREEN_CURSOR_X)
 	LD B, 0
 	LD C, A
 	ADD HL, BC
@@ -139,42 +146,42 @@ get_cursor_ref:
 
 inc_cursor:
 ; uses A
-; ++curs_x
-; if (curs_x == SCREEN_WIDTH)
+; ++SCREEN_CURSOR_X
+; if (SCREEN_CURSOR_X == SCREEN_WIDTH)
 ; {
-;   ++curs_y
-;   curs_x = 0
+;   ++SCREEN_CURSOR_Y
+;   SCREEN_CURSOR_X = 0
 ; }
-	LD A, (curs_x)
+	LD A, (SCREEN_CURSOR_X)
 	INC A
 	CP SCREEN_WIDTH
 	JNZ .store
-	LD A, (curs_y)
+	LD A, (SCREEN_CURSOR_Y)
 	INC A
-	LD (curs_y), A
+	LD (SCREEN_CURSOR_Y), A
 	LD A, 0
 .store:
-	LD (curs_x), A
+	LD (SCREEN_CURSOR_X), A
 	RET
 
 dec_cursor:
 ; uses A
-; if (curs_x == 0)
+; if (SCREEN_CURSOR_X == 0)
 ; {
-;   --curs_y
-;   curs_x = SCREEN_WIDTH
+;   --SCREEN_CURSOR_Y
+;   SCREEN_CURSOR_X = SCREEN_WIDTH
 ; }
-; --curs_x
-	LD A, (curs_x)
+; --SCREEN_CURSOR_X
+	LD A, (SCREEN_CURSOR_X)
 	CP 0
 	JNZ .store
-	LD A, (curs_y)
+	LD A, (SCREEN_CURSOR_Y)
 	DEC A
-	LD (curs_y), A
+	LD (SCREEN_CURSOR_Y), A
 	LD A, SCREEN_WIDTH
 .store:
 	DEC A
-	LD (curs_x), A
+	LD (SCREEN_CURSOR_X), A
 	RET
 
 ; -------------------
@@ -207,8 +214,5 @@ multiply:
 ; with $ character
 
 msg:	.DB	"Hello World", 13, 10, 13, 10, 0
-
-curs_x:	.DB 0
-curs_y:	.DB 0
 
 	.END
