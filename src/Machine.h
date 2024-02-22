@@ -5,6 +5,14 @@
 #include <thread>
 #include <condition_variable>
 #include <set>
+#include <map>
+#include <string>
+
+#ifdef UNICODE
+#define tstring wstring
+#else
+#define tstring string
+#endif
 
 #define WM_UPDATE_STATE (WM_USER + 10)
 
@@ -111,6 +119,7 @@ public:
     std::set<zuint16> tempbreakpoint;
     bool dobreak;
     zuint16 breakonret;
+    std::map<zuint16, std::tstring> symbols;
 
 private:
     void SendAllMessage(UINT Msg, WPARAM wParam = 0, LPARAM lParam = 0) const;

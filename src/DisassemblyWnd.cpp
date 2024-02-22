@@ -67,6 +67,7 @@ LRESULT CALLBACK DisassemblyWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
 
         ListView_AddColumn(hWndListView, TEXT("Address"), LVCFMT_CENTER, 40);
         ListView_AddColumn(hWndListView, TEXT("BP"), LVCFMT_LEFT, 20);
+        ListView_AddColumn(hWndListView, TEXT("Symbol"), LVCFMT_LEFT, 80);
         ListView_AddColumn(hWndListView, TEXT("Opcode"), LVCFMT_LEFT, 160);
 
         int width = GetSystemMetrics(SM_CXVSCROLL); // +4;
@@ -92,11 +93,16 @@ LRESULT CALLBACK DisassemblyWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
                 StringCchPrintf(str, ARRAYSIZE(str), TEXT("%04X"), address);
                 ListView_InsertItemTextParam(hWndListView, nItem, str, address);
 
-                ListView_SetItemText(hWndListView, nItem, 1, isBreakpoint ? TEXT("X") : TEXT(""));
+                if (isBreakpoint)
+                    ListView_SetItemText(hWndListView, nItem, 1, TEXT("X"));
+
+                auto itSymbol = m->symbols.find(address);
+                if (itSymbol != m->symbols.end())
+                    ListView_SetItemText(hWndListView, nItem, 2, (LPWSTR) itSymbol->second.c_str());
 
                 Disassemble(m->memory, address, str);
                 Replace(str, TEXT('\t'), TEXT(' '));
-                ListView_SetItemText(hWndListView, nItem, 2, str);
+                ListView_SetItemText(hWndListView, nItem, 3, str);
 
                 address += OpcodeLen(m->memory, address);
                 ++nItem;

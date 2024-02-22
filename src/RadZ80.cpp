@@ -1,9 +1,13 @@
 #include "resource.h"
 
 #include <Windows.h>
+#include <tchar.h>
 #include <CommCtrl.h>
 #include <fstream>
 #include <memory>
+#include <string>
+#include <vector>
+#include <sstream>
 
 #include "Machine.h"
 #include "WindowsPlus.h"
@@ -11,6 +15,12 @@
 //#include "MainDlg.h"
 #include "TerminalWnd.h"
 #include "WindowMgr.h"
+
+#ifdef UNICODE
+#define tifstream wifstream
+#else
+#define tifstream ifstream
+#endif
 
 HWND g_hWndDlg = NULL;
 
@@ -46,6 +56,42 @@ zuint16 LoadCMD(LPCTSTR filename, zuint8* mem)
     return pc;
 }
 
+std::vector<std::tstring> split(const std::tstring& str, TCHAR delim)
+{
+    std::vector<std::tstring> split;
+    std::wstringstream ss(str);
+    std::tstring sstr;
+    while (std::getline(ss, sstr, delim))
+        if (!sstr.empty())
+            split.push_back(sstr);
+    return split;
+}
+
+void LoadLST(LPCTSTR filename, std::map<zuint16, std::tstring>& symbols)
+{
+    std::tifstream f(filename);
+    std::tstring line;
+    bool in_symbols = false;
+    while (std::getline(f, line))
+    {
+        if (in_symbols)
+        {
+            const std::vector<std::tstring> argsplit = split(line, TEXT(' '));
+            if (argsplit.size() >= 2)
+            {
+                if (argsplit[1][0] == TEXT('='))
+                    symbols[std::stoi(argsplit[1].c_str() + 1, nullptr, 16)] = argsplit[0];
+                else
+                    symbols[std::stoi(argsplit[1], nullptr, 16)] = argsplit[0];
+            }
+        }
+        else if (line == TEXT("Symbol Table:"))
+        {
+            in_symbols = true;
+        }
+    }
+}
+
 HACCEL g_hAccel = NULL;
 
 #ifdef _UNICODE
@@ -66,13 +112,22 @@ int APIENTRY tWinMain(_In_ const HINSTANCE hInstance, _In_opt_ const HINSTANCE h
     for (int argi = 1; argi < __argc; ++argi)
     {
         const LPCTSTR arg = __targv[argi];
+        const LPCTSTR ext = _tcsrchr(arg, TEXT('.'));
+        if (ext && _tcsicmp(ext, TEXT(".cmd")) == 0)
         {
             start = LoadCMD(arg, m->memory);
             loaded = true;
         }
+        else if (ext && _tcsicmp(ext, TEXT(".lst")) == 0)
+        {
+            LoadLST(arg, m->symbols);
+        }
+        else
+            MessageBox(NULL, arg, TEXT("Unknown file format"), MB_OK | MB_ICONERROR);
     }
     //m->breakpoint.insert(start + 0x02);
     //m->breakpoint.insert(start + 0x04);
+    m->symbols[start] = TEXT("start");
 
     z80_power(&m->cpu, TRUE);
 
