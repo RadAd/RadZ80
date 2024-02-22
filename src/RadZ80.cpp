@@ -30,27 +30,32 @@ zuint16 LoadCMD(LPCTSTR filename, zuint8* mem)
 
     std::ifstream f(filename, std::ios::binary);
     zuint8 t = 0;
-    f.read((char*) &t, sizeof(t));
-    switch (t)
+    while (f.read((char*) &t, sizeof(t)))
     {
-    case 1:
-    {
-        zuint8 len = 0;
-        f.read((char*) &len, sizeof(len));
+        switch (t)
+        {
+        case 1:
+        {
+            zuint8 len8 = 0;
+            f.read((char*) &len8, sizeof(len8));
+            zuint16 len = len8;
+            if (len < 3)
+                len += 254;
 
-        zuint16 addr = 0;
-        f.read((char*) &addr, sizeof(addr));
+            zuint16 addr = 0;
+            f.read((char*) &addr, sizeof(addr));
 
-        f.read((char*) (mem + addr), sizeof(zuint8) * len);
+            f.read((char*) (mem + addr), sizeof(zuint8) * len);
 
-        if (pc == 0xFFFF)
-            pc = addr;
+            if (pc == 0xFFFF)
+                pc = addr;
 
-        break;
-    }
-    default:
-        _ASSERT(FALSE);
-        break;
+            break;
+        }
+        default:
+            _ASSERT(FALSE);
+            break;
+        }
     }
 
     return pc;
