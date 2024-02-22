@@ -28,7 +28,7 @@ namespace {
         StringCchPrintf(str, ARRAYSIZE(str), TEXT("%04X"), address);
         ListView_InsertItemTextParam(hWndListView, nItem, str, address);
 
-        Disassemble(m->memory, address, str);
+        Disassemble(m->memory, address, str, &symbol, m);
         Replace(str, TEXT('\t'), TEXT(' '));
         ListView_SetItemText(hWndListView, nItem, 1, str);
     }

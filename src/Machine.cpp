@@ -1,5 +1,15 @@
 #include "Machine.h"
 
+LPCTSTR symbol(UINT16 adr, const void* data)
+{
+    const Machine* m = reinterpret_cast<const Machine*>(data);
+    auto itSymbol = m->symbols.find(adr);
+    if (itSymbol != m->symbols.end())
+        return itSymbol->second.c_str();
+    else
+        return nullptr;
+}
+
 void Machine::SendAllMessage(UINT Msg, WPARAM wParam, LPARAM lParam) const
 {
     for (HWND hWnd : hWnds)

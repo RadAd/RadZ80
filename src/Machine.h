@@ -61,8 +61,11 @@ enum class Reg16
 };
 
 // From z80_disassembler.c
-extern "C" void Disassemble(const UINT8 * Opcodes, UINT16 adr, TCHAR * s);
+typedef LPCTSTR (symbolf)(UINT16 adr, const void* data);
+extern "C" void Disassemble(const UINT8* Opcodes, UINT16 adr, TCHAR* s, symbolf* pSymbol, const void* data);
 extern "C" UINT OpcodeLen(const UINT8 * Opcodes, UINT16 adr);
+
+LPCTSTR symbol(UINT16 adr, const void* data);
 
 inline bool OpcodeIsCall(const zuint8 opcode)
 {

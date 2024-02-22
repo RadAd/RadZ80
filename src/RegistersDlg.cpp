@@ -80,7 +80,7 @@ namespace {
 
         TCHAR cmd[100];
         zuint16 pc = Z80_PC(m->cpu);
-        Disassemble(m->memory, pc, cmd);
+        Disassemble(m->memory, pc, cmd, symbol, m);
         Replace(cmd, TEXT('\t'), TEXT(' '));
         SetDlgItemText(hWndDlg, IDC_CMD, cmd);
 

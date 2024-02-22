@@ -100,7 +100,7 @@ LRESULT CALLBACK DisassemblyWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
                 if (itSymbol != m->symbols.end())
                     ListView_SetItemText(hWndListView, nItem, 2, (LPWSTR) itSymbol->second.c_str());
 
-                Disassemble(m->memory, address, str);
+                Disassemble(m->memory, address, str, symbol, m);
                 Replace(str, TEXT('\t'), TEXT(' '));
                 ListView_SetItemText(hWndListView, nItem, 3, str);
 

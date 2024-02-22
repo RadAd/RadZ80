@@ -56,7 +56,7 @@ zuint16 LoadCMD(LPCTSTR filename, zuint8* mem)
     return pc;
 }
 
-std::vector<std::tstring> split(const std::tstring& str, TCHAR delim)
+inline std::vector<std::tstring> split(const std::tstring& str, TCHAR delim)
 {
     std::vector<std::tstring> split;
     std::wstringstream ss(str);
@@ -65,6 +65,21 @@ std::vector<std::tstring> split(const std::tstring& str, TCHAR delim)
         if (!sstr.empty())
             split.push_back(sstr);
     return split;
+}
+
+inline std::tstring ltrim(std::tstring s) {
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](TCHAR ch) {
+        return !std::isspace(ch);
+        }));
+    return s;
+}
+
+// trim from end (in place)
+inline std::tstring rtrim(std::tstring s) {
+    s.erase(std::find_if(s.rbegin(), s.rend(), [](TCHAR ch) {
+        return !std::isspace(ch);
+        }).base(), s.end());
+    return s;
 }
 
 void LoadLST(LPCTSTR filename, std::map<zuint16, std::tstring>& symbols)
@@ -76,13 +91,11 @@ void LoadLST(LPCTSTR filename, std::map<zuint16, std::tstring>& symbols)
     {
         if (in_symbols)
         {
-            const std::vector<std::tstring> argsplit = split(line, TEXT(' '));
-            if (argsplit.size() >= 2)
+            const std::tstring arg1 = rtrim(line.substr(0, 15));
+            if (!arg1.empty())
             {
-                if (argsplit[1][0] == TEXT('='))
-                    symbols[std::stoi(argsplit[1].c_str() + 1, nullptr, 16)] = argsplit[0];
-                else
-                    symbols[std::stoi(argsplit[1], nullptr, 16)] = argsplit[0];
+                const std::tstring arg2 = line.substr(16, 4);
+                symbols[std::stoi(arg2, nullptr, 16)] = arg1;
             }
         }
         else if (line == TEXT("Symbol Table:"))

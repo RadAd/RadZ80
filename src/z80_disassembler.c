@@ -11,6 +11,17 @@
 #include <string.h>
 #include <stdio.h>
 
+typedef LPCTSTR symbolf(UINT16 adr, const void* data);
+
+void formataddr(TCHAR* s, UINT16 adr, symbolf* pSymbol, const void* data)
+{
+    LPCTSTR sym = pSymbol(adr, data);
+    if (sym)
+        _stprintf(s, TEXT("%4.4Xh[%s]"), adr, sym);
+    else
+        _stprintf(s, TEXT("%4.4Xh"), adr);
+}
+
 UINT OpcodeLen(const UINT8* Opcodes, UINT16 adr)
 {
     UINT   len = 1;
@@ -162,7 +173,7 @@ UINT OpcodeLen(const UINT8* Opcodes, UINT16 adr)
     return(len);
 }
 
-void Disassemble(const UINT8* Opcodes, UINT16 adr, TCHAR* s)
+void Disassemble(const UINT8* Opcodes, UINT16 adr, TCHAR* s, symbolf pSymbol, const void* data)
 {
     UINT8           a = Opcodes[adr];
     UINT8           d = (a >> 3) & 7;
@@ -187,17 +198,17 @@ void Disassemble(const UINT8* Opcodes, UINT16 adr, TCHAR* s)
                 break;
             case 0x02:
                 _tcscpy(s, TEXT("DJNZ\t"));
-                _stprintf(stemp, TEXT("%4.4Xh"), adr + 2 + (BYTE) Opcodes[adr + 1]); _tcscat(s, stemp);
+                formataddr(s + _tcslen(s), adr + 2 + (BYTE) Opcodes[adr + 1], pSymbol, data);
                 break;
             case 0x03:
                 _tcscpy(s, TEXT("JR\t\t"));
-                _stprintf(stemp, TEXT("%4.4Xh"), adr + 2 + (BYTE) Opcodes[adr + 1]); _tcscat(s, stemp);
+                formataddr(s + _tcslen(s), adr + 2 + (BYTE) Opcodes[adr + 1], pSymbol, data);
                 break;
             default:
                 _tcscpy(s, TEXT("JR\t\t"));
                 _tcscat(s, cond[d & 3]);
                 _tcscat(s, TEXT(","));
-                _stprintf(stemp, TEXT("%4.4Xh"), adr + 2 + (BYTE) Opcodes[adr + 1]); _tcscat(s, stemp);
+                formataddr(s + _tcslen(s), adr + 2 + (BYTE) Opcodes[adr + 1], pSymbol, data);
                 break;
             }
             break;
@@ -210,7 +221,7 @@ void Disassemble(const UINT8* Opcodes, UINT16 adr, TCHAR* s)
                 _tcscpy(s, TEXT("LD\t\t"));
                 _tcscat(s, dreg[d >> 1]);
                 _tcscat(s, TEXT(","));
-                _stprintf(stemp, TEXT("%4.4Xh"), Opcodes[adr + 1] + (Opcodes[adr + 2] << 8)); _tcscat(s, stemp);
+                formataddr(s + _tcslen(s), Opcodes[adr + 1] + (Opcodes[adr + 2] << 8), pSymbol, data);
             }
             break;
         case 0x02:
@@ -229,22 +240,22 @@ void Disassemble(const UINT8* Opcodes, UINT16 adr, TCHAR* s)
                 break;
             case 0x04:
                 _tcscpy(s, TEXT("LD\t\t("));
-                _stprintf(stemp, TEXT("%4.4Xh"), Opcodes[adr + 1] + (Opcodes[adr + 2] << 8)); _tcscat(s, stemp);
+                formataddr(s + _tcslen(s), Opcodes[adr + 1] + (Opcodes[adr + 2] << 8), pSymbol, data);
                 _tcscat(s, TEXT("),HL"));
                 break;
             case 0x05:
                 _tcscpy(s, TEXT("LD\t\tHL,("));
-                _stprintf(stemp, TEXT("%4.4Xh"), Opcodes[adr + 1] + (Opcodes[adr + 2] << 8)); _tcscat(s, stemp);
+                formataddr(s + _tcslen(s), Opcodes[adr + 1] + (Opcodes[adr + 2] << 8), pSymbol, data);
                 _tcscat(s, TEXT(")"));
                 break;
             case 0x06:
                 _tcscpy(s, TEXT("LD\t\t("));
-                _stprintf(stemp, TEXT("%4.4Xh"), Opcodes[adr + 1] + (Opcodes[adr + 2] << 8)); _tcscat(s, stemp);
+                formataddr(s + _tcslen(s), Opcodes[adr + 1] + (Opcodes[adr + 2] << 8), pSymbol, data);
                 _tcscat(s, TEXT("),A"));
                 break;
             case 0x07:
                 _tcscpy(s, TEXT("LD\t\tA,("));
-                _stprintf(stemp, TEXT("%4.4Xh"), Opcodes[adr + 1] + (Opcodes[adr + 2] << 8)); _tcscat(s, stemp);
+                formataddr(s + _tcslen(s), Opcodes[adr + 1] + (Opcodes[adr + 2] << 8), pSymbol, data);
                 _tcscat(s, TEXT(")"));
                 break;
             }
@@ -328,13 +339,13 @@ void Disassemble(const UINT8* Opcodes, UINT16 adr, TCHAR* s)
             _tcscpy(s, TEXT("JP\t\t"));
             _tcscat(s, cond[d]);
             _tcscat(s, TEXT(","));
-            _stprintf(stemp, TEXT("%4.4Xh"), Opcodes[adr + 1] + (Opcodes[adr + 2] << 8)); _tcscat(s, stemp);
+            formataddr(s + _tcslen(s), Opcodes[adr + 1] + (Opcodes[adr + 2] << 8), pSymbol, data);
             break;
         case 0x03:
             switch (d) {
             case 0x00:
                 _tcscpy(s, TEXT("JP\t\t"));
-                _stprintf(stemp, TEXT("%4.4Xh"), Opcodes[adr + 1] + (Opcodes[adr + 2] << 8)); _tcscat(s, stemp);
+                formataddr(s + _tcslen(s), Opcodes[adr + 1] + (Opcodes[adr + 2] << 8), pSymbol, data);
                 break;
             case 0x01:                  // 0xCB
                 a = Opcodes[++adr];     // Erweiterungsopcode holen
@@ -398,14 +409,14 @@ void Disassemble(const UINT8* Opcodes, UINT16 adr, TCHAR* s)
             _tcscpy(s, TEXT("CALL\t"));
             _tcscat(s, cond[d]);
             _tcscat(s, TEXT(","));
-            _stprintf(stemp, TEXT("%4.4Xh"), Opcodes[adr + 1] + (Opcodes[adr + 2] << 8)); _tcscat(s, stemp);
+            formataddr(s + _tcslen(s), Opcodes[adr + 1] + (Opcodes[adr + 2] << 8), pSymbol, data);
             break;
         case 0x05:
             if (d & 1) {
                 switch (d >> 1) {
                 case 0x00:
                     _tcscpy(s, TEXT("CALL\t"));
-                    _stprintf(stemp, TEXT("%4.4Xh"), Opcodes[adr + 1] + (Opcodes[adr + 2] << 8)); _tcscat(s, stemp);
+                    formataddr(s + _tcslen(s), Opcodes[adr + 1] + (Opcodes[adr + 2] << 8), pSymbol, data);
                     break;
                 case 0x02:              // 0xED
                     a = Opcodes[++adr]; // Erweiterungsopcode holen
@@ -436,12 +447,12 @@ void Disassemble(const UINT8* Opcodes, UINT16 adr, TCHAR* s)
                                 _tcscpy(s, TEXT("LD\t\t"));
                                 _tcscat(s, dreg[d >> 1]);
                                 _tcscat(s, TEXT(",("));
-                                _stprintf(stemp, TEXT("%4.4Xh"), Opcodes[adr + 1] + (Opcodes[adr + 2] << 8)); _tcscat(s, stemp);
+                                formataddr(s + _tcslen(s), Opcodes[adr + 1] + (Opcodes[adr + 2] << 8), pSymbol, data);
                                 _tcscat(s, TEXT(")"));
                             }
                             else {
                                 _tcscpy(s, TEXT("LD\t\t("));
-                                _stprintf(stemp, TEXT("%4.4Xh"), Opcodes[adr + 1] + (Opcodes[adr + 2] << 8)); _tcscat(s, stemp);
+                                formataddr(s + _tcslen(s), Opcodes[adr + 1] + (Opcodes[adr + 2] << 8), pSymbol, data);
                                 _tcscat(s, TEXT("),"));
                                 _tcscat(s, dreg[d >> 1]);
                             }
@@ -500,11 +511,11 @@ void Disassemble(const UINT8* Opcodes, UINT16 adr, TCHAR* s)
                         _tcscpy(s, TEXT("LD\t\t"));
                         _tcscat(s, ireg);
                         _tcscat(s, TEXT(","));
-                        _stprintf(stemp, TEXT("%4.4Xh"), Opcodes[adr + 1] + (Opcodes[adr + 2] << 8)); _tcscat(s, stemp);
+                        formataddr(s + _tcslen(s), Opcodes[adr + 1] + (Opcodes[adr + 2] << 8), pSymbol, data);
                         break;
                     case 0x22:
                         _tcscpy(s, TEXT("LD\t\t("));
-                        _stprintf(stemp, TEXT("%4.4Xh"), Opcodes[adr + 1] + (Opcodes[adr + 2] << 8)); _tcscat(s, stemp);
+                        formataddr(s + _tcslen(s), Opcodes[adr + 1] + (Opcodes[adr + 2] << 8), pSymbol, data);
                         _tcscat(s, TEXT("),"));
                         _tcscat(s, ireg);
                         break;
@@ -522,7 +533,7 @@ void Disassemble(const UINT8* Opcodes, UINT16 adr, TCHAR* s)
                         _tcscpy(s, TEXT("LD\t\t"));
                         _tcscat(s, ireg);
                         _tcscat(s, TEXT(",("));
-                        _stprintf(stemp, TEXT("%4.4Xh"), Opcodes[adr + 1] + (Opcodes[adr + 2] << 8)); _tcscat(s, stemp);
+                        formataddr(s + _tcslen(s), Opcodes[adr + 1] + (Opcodes[adr + 2] << 8), pSymbol, data);
                         _tcscat(s, TEXT(")"));
                         break;
                     case 0x2B:
