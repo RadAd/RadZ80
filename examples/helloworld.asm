@@ -20,6 +20,7 @@ test:
 
 	LD A, (IX + 0)
 	LD A, (IX + 1)
+	INC (IX + 0)
 
 	stackpop 10
 
@@ -74,30 +75,32 @@ endm
 
 ; ---------------------------------
 ; Return
-;  B - length
+;  A - length
 editline:
-	LD B, 0
+.stacksize equ 10
+.count equ 0
+	stackpush .stacksize
+	LD (IX + .count), 0
 .next:
 	CALL readchar
 	CMP 13	; return
-	RET Z
+	JZ .return
 	CMP 8	; backspace
 	JZ .backspace
-	INC B
-	PUSH B
+	INC (IX + .count)
 	CALL printchar
-	POP B
 	JMP .next
 .backspace:
-	LD A, B
+	LD A, (IX + .count)
 	CP 0
 	JZ .next
-	DEC B
-	PUSH B
+	DEC (IX + .count)
 	CALL backspace
-	POP B
 	JMP .next
-
+.return:
+	LD A, (IX + .count)
+	stackpop .stacksize
+	RET
 
 ; ---------------------------------
 backspace:
@@ -105,7 +108,7 @@ backspace:
 ; Uses BC, DE
 	CALL dec_cursor
 	CALL get_cursor_ref
-	LD (HL), 32
+	LD (HL), 32 ; space
 	RET
 
 ; ---------------------------------
