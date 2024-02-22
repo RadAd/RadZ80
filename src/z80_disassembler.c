@@ -198,17 +198,17 @@ void Disassemble(const UINT8* Opcodes, UINT16 adr, TCHAR* s, symbolf pSymbol, co
                 break;
             case 0x02:
                 _tcscpy(s, TEXT("DJNZ\t"));
-                formataddr(s + _tcslen(s), adr + 2 + (BYTE) Opcodes[adr + 1], pSymbol, data);
+                formataddr(s + _tcslen(s), adr + 2 + (char) Opcodes[adr + 1], pSymbol, data);
                 break;
             case 0x03:
                 _tcscpy(s, TEXT("JR\t\t"));
-                formataddr(s + _tcslen(s), adr + 2 + (BYTE) Opcodes[adr + 1], pSymbol, data);
+                formataddr(s + _tcslen(s), adr + 2 + (char) Opcodes[adr + 1], pSymbol, data);
                 break;
             default:
                 _tcscpy(s, TEXT("JR\t\t"));
                 _tcscat(s, cond[d & 3]);
                 _tcscat(s, TEXT(","));
-                formataddr(s + _tcslen(s), adr + 2 + (BYTE) Opcodes[adr + 1], pSymbol, data);
+                formataddr(s + _tcslen(s), adr + 2 + (char) Opcodes[adr + 1], pSymbol, data);
                 break;
             }
             break;
