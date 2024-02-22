@@ -2,27 +2,27 @@
 
 	.ORG 	0100h
 
-stackpop macro size
-	LD IX, size
-	ADD IX, SP
-	LD SP, IX
+stackpop macro reg, size
+	LD reg, size
+	ADD reg, SP
+	LD SP, reg
 endm
 
-stackpush macro size
-	stackpop -size
+stackpush macro reg, size
+	stackpop reg, -size
 endm
 
 	LD HL, msg
 	CALL printline
 
 test:
-	stackpush 10
+	stackpush IX, 10
 
 	LD A, (IX + 0)
 	LD A, (IX + 1)
 	INC (IX + 0)
 
-	stackpop 10
+	stackpop IX, 10
 
 loop:
 	CALL editline
@@ -79,33 +79,32 @@ endm
 editline:
 .stacksize equ 10
 .count equ 0
-	stackpush .stacksize
-	LD (IX + .count), 0
+	stackpush IX, .stacksize
+	LD (IX[.count]), 0
 .next:
 	CALL readchar
 	CMP 13	; return
 	JZ .return
 	CMP 8	; backspace
 	JZ .backspace
-	INC (IX + .count)
+	INC (IX[.count])
 	CALL printchar
 	JMP .next
 .backspace:
-	LD A, (IX + .count)
+	LD A, (IX[.count])
 	CP 0
 	JZ .next
-	DEC (IX + .count)
+	DEC (IX[.count])
 	CALL backspace
 	JMP .next
 .return:
-	LD A, (IX + .count)
-	stackpop .stacksize
+	LD A, (IX[.count])
+	stackpop IX, .stacksize
 	RET
 
 ; ---------------------------------
 backspace:
 ; Uses HL
-; Uses BC, DE
 	CALL dec_cursor
 	CALL get_cursor_ref
 	LD (HL), 32 ; space
@@ -114,42 +113,39 @@ backspace:
 ; ---------------------------------
 
 newline:
-; Uses A
+	PUSH A
 	LD A, (SCREEN_CURSOR_Y)
 	INC A
 	LD (SCREEN_CURSOR_Y), A
 	LD A, 0
 	LD (SCREEN_CURSOR_X), A
+	POP A
 	RET
 
 ; ---------------------------------
 ; Waits until character is ready
 ; Return
 ; A - character read
-; Uses
-; HL
-; Saves
-; BC
 readchar:
+	PUSH HL
 	LD A, (KEYB_READ)
-.loop:
 	LD HL, KEYB_WRITE
+.wait:	; Wait for key
 	CP (HL)
-	JZ .loop
+	JZ .wait
 	LD HL, KEYB_BUFFER
 	add8to16 HL, A
 	INC A
-	AND A, $0F
+	AND A, $0F	; Wrap - buffer is only 15 characters long
 	LD (KEYB_READ), A
 	LD A, (HL)
+	POP HL
 	RET
 
 ;
 ; ---------------------------------
 ; Routine to print out a char in (a) to terminal
 ; --------------------------------
-; Uses BC, DE
-; Saves HL
 printchar:
 	CMP 13	; return
 	JZ newline
@@ -160,24 +156,39 @@ printchar:
 	POP HL
 	RET
 
+; load a 8bit value into a 16bit register
+ld8 macro h, l, s
+; Uses A
+	LD A, s
+	LD h, 0
+	LD l, A
+endm
+
+save macro l
+	irp r, <l>
+		push r
+	endm
+endm
+
+restore macro l
+	irp r, <l>
+		pop r
+	endm
+endm
+
 ; Load HL with cursor pos as a memory location
 ; HL = SCREEN_REF + SCREEN_CURSOR_Y * SCREEN_WIDTH + SCREEN_CURSOR_X
-; Uses BC, DE
 ; return HL
 get_cursor_ref:
-	PUSH A
-	LD A, (SCREEN_CURSOR_Y)
-	LD B, 0
-	LD C, A
+	save <A, BC, DE>
+	ld8 B, C, (SCREEN_CURSOR_Y)
 	LD DE, SCREEN_WIDTH
-	CALL multiply
-	LD A, (SCREEN_CURSOR_X)
-	LD B, 0
-	LD C, A
-	ADD HL, BC
+	CALL multiply	; HL = SCREEN_WIDTH * SCREEN_CURSOR_Y
+	ld8 B, C, (SCREEN_CURSOR_X)
+	ADD HL, BC		; HL += SCREEN_CURSOR_X
 	LD BC, SCREEN_REF
-	ADD HL, BC
-	POP A
+	ADD HL, BC		; HL += SCREEN_REF
+	restore <DE, BC, A>
 	RET
 
 inc_cursor:

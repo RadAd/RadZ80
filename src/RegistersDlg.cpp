@@ -169,6 +169,8 @@ INT_PTR CALLBACK DlgRegistersProc(HWND hWndDlg, UINT message, WPARAM wParam, LPA
         {
         case IDC_REG_PC:    SetBkColor(hDC, COLOR_PC); break;
         case IDC_REG_SP:    SetBkColor(hDC, COLOR_SP); break;
+        case IDC_REG_IX:    SetBkColor(hDC, COLOR_IX); break;
+        case IDC_REG_IY:    SetBkColor(hDC, COLOR_IY); break;
         case IDC_REG_H: case IDC_REG_L: SetBkColor(hDC, COLOR_HL); break;
         }
         return TRUE;

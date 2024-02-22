@@ -214,6 +214,10 @@ LRESULT CALLBACK MemWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
                                 lplvcd->clrTextBk = COLOR_SP;
                             else if (address == Z80_HL(data->m->cpu))
                                 lplvcd->clrTextBk = COLOR_HL;
+                            else if (address == Z80_IX(data->m->cpu))
+                                lplvcd->clrTextBk = COLOR_IX;
+                            else if (address == Z80_IY(data->m->cpu))
+                                lplvcd->clrTextBk = COLOR_IY;
                             else if (data->changed.find(address) != data->changed.end())
                                 lplvcd->clrTextBk = RGB(255, 0, 0);
                             else
@@ -255,32 +259,25 @@ LRESULT CALLBACK MemWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 
     case WM_REG_CHANGED:
     {
-        switch ((Reg16) lParam)
+        if (lParam >= (LPARAM) Reg16::None)
         {
-        case Reg16::PC:
-        {
+            const Reg16 r = (Reg16) lParam;
             const HWND hWndListView = GetDlgItem(hWnd, LISTVIEW_ID);
-            const zuint addr = Z80_PC(data->m->cpu);
+            const zuint addr = *GetRegU16(r, data->m);
             InvalidateAddress(hWndListView, addr);
-            break;
         }
-        case Reg16::SP:
+        else
         {
-            const HWND hWndListView = GetDlgItem(hWnd, LISTVIEW_ID);
-            const zuint addr = Z80_SP(data->m->cpu);
-            InvalidateAddress(hWndListView, addr);
-            break;
-        }
-        }
-        switch ((Reg8) lParam)
-        {
-        case Reg8::H: case Reg8::L:
-        {
-            const HWND hWndListView = GetDlgItem(hWnd, LISTVIEW_ID);
-            const zuint addr = Z80_HL(data->m->cpu);
-            InvalidateAddress(hWndListView, addr);
-            break;
-        }
+            switch ((Reg8) lParam)
+            {
+            case Reg8::H: case Reg8::L:
+            {
+                const HWND hWndListView = GetDlgItem(hWnd, LISTVIEW_ID);
+                const zuint addr = Z80_HL(data->m->cpu);
+                InvalidateAddress(hWndListView, addr);
+                break;
+            }
+            }
         }
         return 0;
     }
@@ -290,7 +287,7 @@ LRESULT CALLBACK MemWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
     case WM_CPU_STEP_STOP:
     {
         const HWND hWndListView = GetDlgItem(hWnd, LISTVIEW_ID);
-        for (zuint16 address : { Z80_PC(data->m->cpu), Z80_SP(data->m->cpu), Z80_HL(data->m->cpu) })
+        for (zuint16 address : { Z80_PC(data->m->cpu), Z80_SP(data->m->cpu), Z80_IX(data->m->cpu), Z80_IY(data->m->cpu), Z80_HL(data->m->cpu) })
             InvalidateAddress(hWndListView, address);
         return 0;
     }
