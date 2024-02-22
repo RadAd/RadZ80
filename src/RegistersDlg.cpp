@@ -288,6 +288,42 @@ INT_PTR CALLBACK DlgRegistersProc(HWND hWndDlg, UINT message, WPARAM wParam, LPA
             }
             }
             break;
+
+        case IDC_FLAG_SF: case IDC_FLAG_ZF: case IDC_FLAG_YF: case IDC_FLAG_HF: case IDC_FLAG_XF: case IDC_FLAG_PF: case IDC_FLAG_NF: case IDC_FLAG_CF:
+            switch (HIWORD(wParam))
+            {
+            case BN_CLICKED:
+            {
+                const Reg8 reg = Reg8::F;
+                zuint8& regf = Z80_F(m->cpu);
+                m->SendRegChanged(reg); // Before
+                if (IsDlgButtonChecked(hWndDlg, nIDDlgItem))
+                    regf |= GetFlag(nIDDlgItem);
+                else
+                    regf &= ~GetFlag(nIDDlgItem);
+                m->SendRegChanged(reg); // After
+                break;
+            }
+            }
+            break;
+
+        case IDC_FLAG_SF_: case IDC_FLAG_ZF_: case IDC_FLAG_YF_: case IDC_FLAG_HF_: case IDC_FLAG_XF_: case IDC_FLAG_PF_: case IDC_FLAG_NF_: case IDC_FLAG_CF_:
+            switch (HIWORD(wParam))
+            {
+            case BN_CLICKED:
+            {
+                const Reg8 reg = Reg8::F_;
+                zuint8& regf = Z80_F_(m->cpu);
+                m->SendRegChanged(reg); // Before
+                if (IsDlgButtonChecked(hWndDlg, nIDDlgItem))
+                    regf |= GetFlag(nIDDlgItem);
+                else
+                    regf &= ~GetFlag(nIDDlgItem);
+                m->SendRegChanged(reg); // After
+                break;
+            }
+            }
+            break;
         }
         return TRUE;
     }
