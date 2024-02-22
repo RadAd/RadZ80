@@ -55,23 +55,36 @@ add8to16 macro r16, r8
 endm
 
 ; ---------------------------------
-
+; Return
+;  B - length
 editline:
+	LD B, 0
+.next:
 	CALL readchar
 	CMP 13	; return
 	RET Z
 	CMP 8	; backspace
 	JZ .backspace
+	INC B
+	PUSH B
 	CALL printchar
-	JMP editline
+	POP B
+	JMP .next
 .backspace:
+	LD A, B
+	CP 0
+	JZ .next
+	DEC B
+	PUSH B
 	CALL backspace
-	JMP editline
+	POP B
+	JMP .next
 
 
 ; ---------------------------------
 backspace:
 ; Uses HL
+; Uses BC, DE
 	CALL dec_cursor
 	CALL get_cursor_ref
 	LD (HL), 32
@@ -114,6 +127,8 @@ readchar:
 ; ---------------------------------
 ; Routine to print out a char in (a) to terminal
 ; --------------------------------
+; Uses BC, DE
+; Saves HL
 printchar:
 	CMP 13	; return
 	JZ newline
