@@ -2,8 +2,26 @@
 
 	.ORG 	0100h
 
+stackpop macro size
+	LD IX, size
+	ADD IX, SP
+	LD SP, IX
+endm
+
+stackpush macro size
+	stackpop -size
+endm
+
 	LD HL, msg
 	CALL printline
+
+test:
+	stackpush 10
+
+	LD A, (IX + 0)
+	LD A, (IX + 1)
+
+	stackpop 10
 
 loop:
 	CALL editline
