@@ -2,15 +2,7 @@
 
 	.ORG 	0100h
 
-stackpop macro reg, size
-	LD reg, size
-	ADD reg, SP
-	LD SP, reg
-endm
-
-stackpush macro reg, size
-	stackpop reg, -size
-endm
+.include "utils.inc"
 
 	LD HL, msg
 	CALL printline
@@ -51,27 +43,16 @@ printline:
 SCREEN_REF		equ		$8000
 SCREEN_WIDTH	equ		80
 SCREEN_HEIGHT	equ		25
-SCREEN_CURSOR_X	equ		$F101
-SCREEN_CURSOR_Y	equ		$F102
+SCREEN_REG		equ		$F100
+OFFSET_CURSOR_X	equ		$01
+OFFSET_CURSOR_Y	equ		$02
+SCREEN_CURSOR_X	equ		SCREEN_REG + OFFSET_CURSOR_X
+SCREEN_CURSOR_Y	equ		SCREEN_REG + OFFSET_CURSOR_Y
+
 
 KEYB_READ		equ		$FF20
 KEYB_WRITE		equ		$FF21
 KEYB_BUFFER		equ		$FF00
-
-; Uses
-; BC
-add8to16q macro r16, r8
-	LD B, 0
-	LD C, r8
-	ADD r16, BC
-endm
-; Saves
-; BC
-add8to16 macro r16, r8
-	PUSH BC
-	add8to16q r16, r8
-	POP BC
-endm
 
 ; ---------------------------------
 ; Return
@@ -113,6 +94,14 @@ backspace:
 ; ---------------------------------
 
 newline:
+if 1
+	save IX
+	LD IX, SCREEN_REG
+	INC (IX[OFFSET_CURSOR_Y])
+	LD (IX[OFFSET_CURSOR_X]), 0
+	restore IX
+	RET
+else
 	PUSH A
 	LD A, (SCREEN_CURSOR_Y)
 	INC A
@@ -121,6 +110,7 @@ newline:
 	LD (SCREEN_CURSOR_X), A
 	POP A
 	RET
+endif
 
 ; ---------------------------------
 ; Waits until character is ready
@@ -157,38 +147,25 @@ printchar:
 	RET
 
 ; load a 8bit value into a 16bit register
-ld8 macro h, l, s
-; Uses A
-	LD A, s
-	LD h, 0
-	LD l, A
-endm
-
-save macro l
-	irp r, <l>
-		push r
-	endm
-endm
-
-restore macro l
-	irp r, <l>
-		pop r
-	endm
+ld8 macro rh, rl, s
+	LD rh, 0
+	LD rl, s
 endm
 
 ; Load HL with cursor pos as a memory location
 ; HL = SCREEN_REF + SCREEN_CURSOR_Y * SCREEN_WIDTH + SCREEN_CURSOR_X
 ; return HL
 get_cursor_ref:
-	save <A, BC, DE>
-	ld8 B, C, (SCREEN_CURSOR_Y)
+	save <A, BC, DE, IX>
+	LD IX, SCREEN_REG
+	ld8 B, C, (IX[OFFSET_CURSOR_Y])
 	LD DE, SCREEN_WIDTH
-	CALL multiply	; HL = SCREEN_WIDTH * SCREEN_CURSOR_Y
-	ld8 B, C, (SCREEN_CURSOR_X)
-	ADD HL, BC		; HL += SCREEN_CURSOR_X
+	CALL multiply	; HL = SCREEN_WIDTH * IX[OFFSET_CURSOR_Y]
+	ld8 B, C, (IX[OFFSET_CURSOR_X])
+	ADD HL, BC		; HL += IX[OFFSET_CURSOR_X]
 	LD BC, SCREEN_REF
 	ADD HL, BC		; HL += SCREEN_REF
-	restore <DE, BC, A>
+	restore <IX, DE, BC, A>
 	RET
 
 inc_cursor:
@@ -219,6 +196,19 @@ dec_cursor:
 ;   SCREEN_CURSOR_X = SCREEN_WIDTH
 ; }
 ; --SCREEN_CURSOR_X
+if 1
+	save IX
+	LD IX, SCREEN_REG
+	LD A, 0
+	CP (IX[OFFSET_CURSOR_X])
+	JNZ .store
+	DEC (IX[OFFSET_CURSOR_Y])
+	LD (IX[OFFSET_CURSOR_X]), SCREEN_WIDTH
+.store:
+	DEC (IX[OFFSET_CURSOR_X])
+	restore IX
+	RET
+else
 	LD A, (SCREEN_CURSOR_X)
 	CP 0
 	JNZ .store
@@ -230,6 +220,7 @@ dec_cursor:
 	DEC A
 	LD (SCREEN_CURSOR_X), A
 	RET
+endif
 
 ; -------------------
 ; Multiply HL = BC * DE
