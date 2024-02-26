@@ -195,6 +195,16 @@ INT_PTR CALLBACK DlgRegistersProc(HWND hWndDlg, UINT message, WPARAM wParam, LPA
             EnableWindow(GetDlgItem(hWndDlg, IDC_RUN), TRUE);
             EnableWindow(GetDlgItem(hWndDlg, IDC_BREAK), FALSE);
             UpdateRegisters(hWndDlg);
+            for (int nIDDlgItem : { IDC_REG_A, IDC_REG_F, IDC_REG_B, IDC_REG_C, IDC_REG_D, IDC_REG_E, IDC_REG_H, IDC_REG_L })
+                EnableWindow(GetDlgItem(hWndDlg, nIDDlgItem), TRUE);
+            for (int nIDDlgItem : { IDC_FLAG_SF, IDC_FLAG_ZF, IDC_FLAG_YF, IDC_FLAG_HF, IDC_FLAG_XF, IDC_FLAG_PF, IDC_FLAG_NF, IDC_FLAG_CF })
+                EnableWindow(GetDlgItem(hWndDlg, nIDDlgItem), TRUE);
+            for (int nIDDlgItem : { IDC_REG_A_, IDC_REG_F_, IDC_REG_B_, IDC_REG_C_, IDC_REG_D_, IDC_REG_E_, IDC_REG_H_, IDC_REG_L_ })
+                EnableWindow(GetDlgItem(hWndDlg, nIDDlgItem), TRUE);
+            for (int nIDDlgItem : { IDC_FLAG_SF_, IDC_FLAG_ZF_, IDC_FLAG_YF_, IDC_FLAG_HF_, IDC_FLAG_XF_, IDC_FLAG_PF_, IDC_FLAG_NF_, IDC_FLAG_CF_ })
+                EnableWindow(GetDlgItem(hWndDlg, nIDDlgItem), TRUE);
+            for (int nIDDlgItem : { IDC_REG_PC, IDC_REG_SP, IDC_REG_IX, IDC_REG_IY })
+                EnableWindow(GetDlgItem(hWndDlg, nIDDlgItem), TRUE);
             break;
         case State::RUN:
             EnableWindow(GetDlgItem(hWndDlg, IDC_STEP), FALSE);
@@ -202,6 +212,16 @@ INT_PTR CALLBACK DlgRegistersProc(HWND hWndDlg, UINT message, WPARAM wParam, LPA
             EnableWindow(GetDlgItem(hWndDlg, IDC_STEP_OUT), FALSE);
             EnableWindow(GetDlgItem(hWndDlg, IDC_RUN), FALSE);
             EnableWindow(GetDlgItem(hWndDlg, IDC_BREAK), TRUE);
+            for (int nIDDlgItem : { IDC_REG_A, IDC_REG_F, IDC_REG_B, IDC_REG_C, IDC_REG_D, IDC_REG_E, IDC_REG_H, IDC_REG_L })
+                EnableWindow(GetDlgItem(hWndDlg, nIDDlgItem), FALSE);
+            for (int nIDDlgItem : { IDC_FLAG_SF, IDC_FLAG_ZF, IDC_FLAG_YF, IDC_FLAG_HF, IDC_FLAG_XF, IDC_FLAG_PF, IDC_FLAG_NF, IDC_FLAG_CF })
+                EnableWindow(GetDlgItem(hWndDlg, nIDDlgItem), FALSE);
+            for (int nIDDlgItem : { IDC_REG_A_, IDC_REG_F_, IDC_REG_B_, IDC_REG_C_, IDC_REG_D_, IDC_REG_E_, IDC_REG_H_, IDC_REG_L_ })
+                EnableWindow(GetDlgItem(hWndDlg, nIDDlgItem), FALSE);
+            for (int nIDDlgItem : { IDC_FLAG_SF_, IDC_FLAG_ZF_, IDC_FLAG_YF_, IDC_FLAG_HF_, IDC_FLAG_XF_, IDC_FLAG_PF_, IDC_FLAG_NF_, IDC_FLAG_CF_ })
+                EnableWindow(GetDlgItem(hWndDlg, nIDDlgItem), FALSE);
+            for (int nIDDlgItem : { IDC_REG_PC, IDC_REG_SP, IDC_REG_IX, IDC_REG_IY })
+                EnableWindow(GetDlgItem(hWndDlg, nIDDlgItem), FALSE);
             break;
         case State::EXIT:
             EnableWindow(GetDlgItem(hWndDlg, IDC_STEP), FALSE);
