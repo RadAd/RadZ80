@@ -213,7 +213,7 @@ BEGIN
     POPUP "&View"
     BEGIN
         MENUITEM "&Registers",                  ID_VIEW_REGISTERS
-        MENUITEM "&Memory",                     ID_VIEW_OUTPUT
+        MENUITEM "&Memory",                     ID_VIEW_MEMORY
         MENUITEM "&Breakpoints",                ID_VIEW_BREAKPOINTS
         MENUITEM "&Dissassembly",               ID_VIEW_DISASSEMBLY
         MENUITEM "&Output",                     ID_VIEW_OUTPUT
