@@ -4,7 +4,6 @@
 //
 #define IDD_REGISTERS                   101
 #define IDR_MAIN                        103
-#define IDD_DIALOG1                     105
 #define IDD_INPUTBOX                    105
 #define IDC_STEP                        1000
 #define IDC_RUN                         1001
@@ -68,7 +67,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        107
-#define _APS_NEXT_COMMAND_VALUE         40021
+#define _APS_NEXT_COMMAND_VALUE         40027
 #define _APS_NEXT_CONTROL_VALUE         1045
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

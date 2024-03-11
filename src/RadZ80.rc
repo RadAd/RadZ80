@@ -213,7 +213,7 @@ BEGIN
     POPUP "&View"
     BEGIN
         MENUITEM "&Registers",                  ID_VIEW_REGISTERS
-        MENUITEM "&Memory",                     ID_VIEW_MEMORY
+        MENUITEM "&Memory",                     ID_VIEW_OUTPUT
         MENUITEM "&Breakpoints",                ID_VIEW_BREAKPOINTS
         MENUITEM "&Dissassembly",               ID_VIEW_DISASSEMBLY
         MENUITEM "&Output",                     ID_VIEW_OUTPUT
@@ -228,10 +228,15 @@ END
 
 IDR_MAIN ACCELERATORS
 BEGIN
+    VK_F5,          ID_DEBUG_RUN,           VIRTKEY, NOINVERT
     VK_F11,         ID_DEBUG_STEP,          VIRTKEY, NOINVERT
     VK_F11,         ID_DEBUG_STEPOUT,       VIRTKEY, SHIFT, NOINVERT
     VK_F10,         ID_DEBUG_STEPOVER,      VIRTKEY, NOINVERT
-    VK_F5,          ID_DEBUG_RUN,           VIRTKEY, NOINVERT
+    "B",            ID_VIEW_BREAKPOINTS,    VIRTKEY, CONTROL, NOINVERT
+    "O",            ID_VIEW_OUTPUT,         VIRTKEY, CONTROL, NOINVERT
+    "D",            ID_VIEW_DISASSEMBLY,    VIRTKEY, CONTROL, NOINVERT
+    "M",            ID_VIEW_MEMORY,         VIRTKEY, CONTROL, NOINVERT
+    "R",            ID_VIEW_REGISTERS,      VIRTKEY, CONTROL, NOINVERT
 END
 
 #endif    // English (United Kingdom) resources
