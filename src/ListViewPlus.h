@@ -84,6 +84,15 @@ inline void ListView_SetItemParam(HWND hWndListView, int iItem, LPARAM lParam)
     ListView_SetItem(hWndListView, &item);
 }
 
+inline int ListView_GetWidth(HWND hWndListView)
+{
+    int width = 0;
+    const int ColCount = ListView_GetColumnCount(hWndListView);
+    for (int i = 0; i < ColCount; ++i)
+        width += ListView_GetColumnWidth(hWndListView, i);
+    return width;
+}
+
 BOOL ListView_EnsureSubItemVisible(HWND hWnd, _In_ int nItem, _In_ int nCol, _In_ BOOL bPartialOK);
 
 LRESULT CALLBACK ListView_EditSubItemProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);

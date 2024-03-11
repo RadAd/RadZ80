@@ -28,9 +28,15 @@ namespace {
         StringCchPrintf(str, ARRAYSIZE(str), TEXT("%04X"), address);
         ListView_InsertItemTextParam(hWndListView, nItem, str, address);
 
+        auto itSymbol = m->symbols.find(address);
+        if (itSymbol != m->symbols.end())
+            ListView_SetItemText(hWndListView, nItem, 1, (LPWSTR) itSymbol->second.c_str()) // No semi-colon
+        else
+            ListView_SetItemText(hWndListView, nItem, 1, (LPWSTR) L"");
+
         Disassemble(m->memory, address, str, &symbol, m);
         Replace(str, TEXT('\t'), TEXT(' '));
-        ListView_SetItemText(hWndListView, nItem, 1, str);
+        ListView_SetItemText(hWndListView, nItem, 2, str);
     }
 }
 
@@ -63,19 +69,8 @@ LRESULT CALLBACK BreakpointWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARA
         //DeleteObject(hFont);
 
         ListView_AddColumn(hWndListView, TEXT("Address"), LVCFMT_CENTER, 40);
+        ListView_AddColumn(hWndListView, TEXT("Symbol"), LVCFMT_LEFT, 80);
         ListView_AddColumn(hWndListView, TEXT("Opcode"), LVCFMT_LEFT, 160);
-
-        int width = GetSystemMetrics(SM_CXVSCROLL); // +4;
-        const int ColCount = ListView_GetColumnCount(hWndListView);
-        for (int i = 0; i < ColCount; ++i)
-        {
-            //ListView_SetColumnWidth(hWndListView, i, LVSCW_AUTOSIZE);
-            width += ListView_GetColumnWidth(hWndListView, i);
-        }
-
-        rcClient.right = rcClient.left + width;
-        AdjustWindowRect(&rcClient, GetWindowStyle(hWnd), FALSE);
-        SetWindowPos(hWnd, NULL, rcClient.left, rcClient.top, Width(rcClient), Height(rcClient), SWP_NOMOVE | SWP_NOZORDER);
 
         int nItem = 0;
         for (zuint16 address : m->breakpoint)
@@ -83,6 +78,10 @@ LRESULT CALLBACK BreakpointWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARA
             InsertItem(hWndListView, m, nItem, address);
             ++nItem;
         }
+
+        rcClient.right = rcClient.left + ListView_GetWidth(hWndListView) + GetSystemMetrics(SM_CXVSCROLL);
+        AdjustWindowRect(&rcClient, GetWindowStyle(hWnd), FALSE);
+        SetWindowPos(hWnd, NULL, rcClient.left, rcClient.top, Width(rcClient), Height(rcClient), SWP_NOMOVE | SWP_NOZORDER);
 
         return 0;
     }

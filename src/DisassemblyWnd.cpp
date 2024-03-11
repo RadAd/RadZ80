@@ -70,18 +70,6 @@ LRESULT CALLBACK DisassemblyWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
         ListView_AddColumn(hWndListView, TEXT("Symbol"), LVCFMT_LEFT, 80);
         ListView_AddColumn(hWndListView, TEXT("Opcode"), LVCFMT_LEFT, 160);
 
-        int width = GetSystemMetrics(SM_CXVSCROLL); // +4;
-        const int ColCount = ListView_GetColumnCount(hWndListView);
-        for (int i = 0; i < ColCount; ++i)
-        {
-            //ListView_SetColumnWidth(hWndListView, i, LVSCW_AUTOSIZE);
-            width += ListView_GetColumnWidth(hWndListView, i);
-        }
-
-        rcClient.right = rcClient.left + width;
-        AdjustWindowRect(&rcClient, GetWindowStyle(hWnd), FALSE);
-        SetWindowPos(hWnd, NULL, rcClient.left, rcClient.top, Width(rcClient), Height(rcClient), SWP_NOMOVE | SWP_NOZORDER);
-
         {
             zuint16 address = 0x0000;
             int nItem = 0;
@@ -108,6 +96,13 @@ LRESULT CALLBACK DisassemblyWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
                 ++nItem;
             }
         }
+
+        ListView_SetColumnWidth(hWndListView, 2, LVSCW_AUTOSIZE);
+        ListView_SetColumnWidth(hWndListView, 3, LVSCW_AUTOSIZE);
+
+        rcClient.right = rcClient.left + ListView_GetWidth(hWndListView) + GetSystemMetrics(SM_CXVSCROLL);
+        AdjustWindowRect(&rcClient, GetWindowStyle(hWnd), FALSE);
+        SetWindowPos(hWnd, NULL, rcClient.left, rcClient.top, Width(rcClient), Height(rcClient), SWP_NOMOVE | SWP_NOZORDER);
 
         {
             const int nItem = FindItem(hWndListView, Z80_PC(m->cpu));
