@@ -61,6 +61,15 @@ zuint16 LoadCMD(LPCTSTR filename, zuint8* mem)
     return pc;
 }
 
+void LoadBIN(LPCTSTR filename, zuint8* mem)
+{
+    std::ifstream f(filename, std::ios::binary);
+    const zuint16 chunk = 256u;
+    zuint16 offset = 0;
+    while (f.read((char*) mem + offset, sizeof(*mem) * chunk))
+        offset += chunk;
+}
+
 inline std::vector<std::tstring> split(const std::tstring& str, TCHAR delim)
 {
     std::vector<std::tstring> split;
@@ -110,6 +119,36 @@ void LoadLST(LPCTSTR filename, std::map<zuint16, std::tstring>& symbols)
     }
 }
 
+void LoadMAP(LPCTSTR filename, std::map<zuint16, std::tstring>& symbols)
+{
+    std::tifstream f(filename);
+    std::tstring line;
+    bool in_symbols = false;
+    while (std::getline(f, line))
+    {
+        if (in_symbols)
+        {
+            if (!line.empty() && line.front() == ' ')
+            {
+                const std::tstring arg1 = line.substr(6, 8);
+                if (!arg1.empty() && arg1.front() == '-')
+                    ;
+                else if (!arg1.empty())
+                {
+                    const std::tstring arg2 = rtrim(line.substr(15, 30));
+                    symbols[std::stoi(arg1, nullptr, 16)] = arg2;
+                }
+            }
+            else
+                in_symbols = false;
+        }
+        else if (line == TEXT("      Value  Global                              Global Defined In Module"))
+        {
+            in_symbols = true;
+        }
+    }
+}
+
 HACCEL g_hAccel = NULL;
 
 #ifdef _UNICODE
@@ -131,14 +170,24 @@ int APIENTRY tWinMain(_In_ const HINSTANCE hInstance, _In_opt_ const HINSTANCE h
     {
         const LPCTSTR arg = __targv[argi];
         const LPCTSTR ext = _tcsrchr(arg, TEXT('.'));
-        if (ext && _tcsicmp(ext, TEXT(".cmd")) == 0)
+        if (ext && _tcsicmp(ext, TEXT(".cmd")) == 0)    // from zmac
         {
             start = LoadCMD(arg, m->memory);
             loaded = true;
         }
-        else if (ext && _tcsicmp(ext, TEXT(".lst")) == 0)
+        else if (ext && _tcsicmp(ext, TEXT(".lst")) == 0)    // from zmac
         {
             LoadLST(arg, m->symbols);
+        }
+        else if (ext && _tcsicmp(ext, TEXT(".bin")) == 0)    // from sdcc
+        {
+            LoadBIN(arg, m->memory);
+            start = 0;
+            loaded = true;
+        }
+        else if (ext && _tcsicmp(ext, TEXT(".map")) == 0)    // from sdcc
+        {
+            LoadMAP(arg, m->symbols);
         }
         else
             MessageBox(NULL, arg, TEXT("Unknown file format"), MB_OK | MB_ICONERROR);
