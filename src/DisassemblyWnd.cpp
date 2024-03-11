@@ -122,6 +122,10 @@ LRESULT CALLBACK DisassemblyWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
         return DefWindowProc(hWnd, message, wParam, lParam);
     }
 
+    case WM_SETFOCUS:
+        SetFocus(GetDlgItem(hWnd, LISTVIEW_ID));
+        return 0;
+
     case WM_NOTIFY:
     {
         LPNMHDR pNmHdr = LPNMHDR(lParam);

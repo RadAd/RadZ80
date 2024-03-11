@@ -73,17 +73,16 @@ void Machine::MemWrite(zuint16 address, zuint8 value, bool fromemulation)
     SendAllMessage(WM_MEM_CHANGED, address, MAKEWORD(value, fromemulation));
 }
 
-void Machine::ToggleBreakPoint(zuint16 address)
+void Machine::SetBreakPoint(zuint16 address, bool set)
 {
-    const auto it = breakpoint.find(address);
-    if (it == breakpoint.end())
+    if (set)
     {
         breakpoint.insert(address);
         SendAllMessage(WM_BREAKPOINT_CHANGED, address, TRUE);
     }
     else
     {
-        breakpoint.erase(it);
+        breakpoint.erase(address);
         SendAllMessage(WM_BREAKPOINT_CHANGED, address, FALSE);
     }
 }

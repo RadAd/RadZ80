@@ -105,14 +105,9 @@ LRESULT CALLBACK MemWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
         return DefWindowProc(hWnd, message, wParam, lParam);
     }
 
-#if 0 // Doesn't seem to work
     case WM_SETFOCUS:
-    {
-        const HWND hWndChild = GetDlgItem(hWnd, LISTVIEW_ID);
-        SetFocus(hWndChild);
-        return LRESULT(hWndChild);
-    }
-#endif
+        SetFocus(GetDlgItem(hWnd, LISTVIEW_ID));
+        return 0;
 
     case WM_NOTIFY:
     {

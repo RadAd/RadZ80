@@ -97,6 +97,8 @@ inline int BinarySearch(GetValue* gv, void* context, const int n, const int key)
 }
 #endif
 
+BOOL InputBox(HWND hWnd, LPCTSTR strPrompt, LPCTSTR strTitle, LPTSTR strText, INT cchMaxText);
+
 #ifdef __cplusplus
 }
 #endif

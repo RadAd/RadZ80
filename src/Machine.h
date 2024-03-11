@@ -115,7 +115,8 @@ public:
 
     bool IsBreakPoint(zuint16 address) const { return breakpoint.find(address) != breakpoint.end(); }
     bool IsTempBreakPoint(zuint16 address) const { return tempbreakpoint.find(address) != tempbreakpoint.end(); }
-    void ToggleBreakPoint(zuint16 address);
+    void SetBreakPoint(zuint16 address, bool set);
+    void ToggleBreakPoint(zuint16 address) { SetBreakPoint(address, breakpoint.find(address) == breakpoint.end()); }
 
     //zusize  cycles;
     zuint8  memory[65536];

@@ -2,6 +2,7 @@
 
 #include <Windowsx.h>
 #include <strsafe.h>
+#include <tchar.h>
 
 #include "Machine.h"
 //#include "EditPlus.h"
@@ -28,7 +29,7 @@ namespace {
         StringCchPrintf(str, ARRAYSIZE(str), TEXT("%04X"), address);
         ListView_InsertItemTextParam(hWndListView, nItem, str, address);
 
-        auto itSymbol = m->symbols.find(address);
+        const auto itSymbol = m->symbols.find(address);
         if (itSymbol != m->symbols.end())
             ListView_SetItemText(hWndListView, nItem, 1, (LPWSTR) itSymbol->second.c_str()) // No semi-colon
         else
@@ -90,6 +91,10 @@ LRESULT CALLBACK BreakpointWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARA
         m->Unregister(hWnd);
         return DefWindowProc(hWnd, message, wParam, lParam);
 
+    case WM_SETFOCUS:
+        SetFocus(GetDlgItem(hWnd, LISTVIEW_ID));
+        return 0;
+
     case WM_SIZE:
     {
         const HWND hWndListView = GetDlgItem(hWnd, LISTVIEW_ID);
@@ -114,7 +119,33 @@ LRESULT CALLBACK BreakpointWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                 {
                     const int i = ListView_GetNextItem(pNmHdr->hwndFrom, -1, LVNI_FOCUSED);
                     if (i >= 0) // && MessageBox(hWnd, TEXT("Delete breakpoint?"), TEXT("Delete Breakpoint?"), MB_YESNO) == IDYES)
-                        ListView_DeleteItem(pNmHdr->hwndFrom, i);
+                    {
+                        const zuint16 address = (zuint16) ListView_GetItemParam(pNmHdr->hwndFrom, i);
+                        m->SetBreakPoint(address, FALSE);
+                    }
+                    break;
+                }
+                case VK_INSERT:
+                {
+                    TCHAR address[100] = TEXT("");
+                    if (InputBox(hWnd, TEXT("Address/Symbol?"), TEXT("Add Breakpoint"), address, ARRAYSIZE(address)))
+                    {
+                        if (std::isxdigit(address[0]))
+                            m->SetBreakPoint(zuint16(_tcstol(address, nullptr, 16)), TRUE);
+                        else
+                        {
+                            const auto itSymbol = [m, &address]() {
+                                for (auto it = m->symbols.begin(); it != m->symbols.end(); ++it)
+                                    if (it->second == address)
+                                        return it;
+                                return m->symbols.end();
+                                }();
+                                if (itSymbol != m->symbols.end())
+                                    m->SetBreakPoint(itSymbol->first, TRUE);
+                                else
+                                    MessageBox(hWnd, TEXT("Symbol not found."), TEXT("Not found"), MB_OK | MB_ICONERROR);
+                        }
+                    }
                     break;
                 }
                 }

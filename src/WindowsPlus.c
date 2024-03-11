@@ -1,6 +1,7 @@
 #include "WindowsPlus.h"
 
 #include <tchar.h>
+#include "resource.h"
 
 struct OwnedWindowData
 {
@@ -45,4 +46,56 @@ HWND FindOwnedWindow(HWND hOwner, LPCTSTR lpClassName, LPCTSTR lpWindowName)
     data.hFound = NULL;
     EnumWindows(EnumOwnedWindow, (LPARAM) &data);
     return data.hFound;
+}
+
+struct InputBoxParam
+{
+    LPCTSTR strPrompt;
+    LPCTSTR strTitle;
+    LPTSTR strText;
+    INT cchMaxText;
+};
+
+static INT_PTR InputBoxDlg(HWND hWndDlg, UINT nCode, WPARAM wParam, LPARAM lParam)
+{
+    struct InputBoxParam* pibp = (struct InputBoxParam*) GetWindowLongPtr(hWndDlg, GWLP_USERDATA);
+
+    switch (nCode)
+    {
+    case WM_INITDIALOG:
+    {
+        pibp = (struct InputBoxParam*) lParam;
+        SetWindowLongPtr(hWndDlg, GWLP_USERDATA, (LONG_PTR) pibp);
+        SetWindowText(hWndDlg, pibp->strTitle);
+        SetDlgItemText(hWndDlg, IDC_PROMPT, pibp->strPrompt);
+        return TRUE;
+    }
+
+    case WM_COMMAND:
+        switch (wParam)
+        {
+        case IDOK:
+            GetDlgItemText(hWndDlg, IDC_EDIT1, pibp->strText, pibp->cchMaxText);
+            EndDialog(hWndDlg, IDOK);
+            return TRUE;
+        case IDCANCEL:
+            EndDialog(hWndDlg, IDCANCEL);
+            return TRUE;
+        default:
+            return FALSE;
+        }
+    default:
+        return FALSE;
+    }
+}
+
+BOOL InputBox(HWND hWnd, LPCTSTR strPrompt, LPCTSTR strTitle, LPTSTR strText, INT cchMaxText)
+{
+    const HINSTANCE hInstance = GetModuleHandle(NULL);
+    struct InputBoxParam ibp;
+    ibp.strPrompt = strPrompt;
+    ibp.strTitle = strTitle;
+    ibp.strText = strText;
+    ibp.cchMaxText = cchMaxText;
+    return DialogBoxParam(hInstance, MAKEINTRESOURCE(IDD_INPUTBOX), hWnd, InputBoxDlg, (LPARAM) &ibp) == IDOK;
 }
