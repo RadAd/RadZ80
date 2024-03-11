@@ -97,6 +97,33 @@ LRESULT CALLBACK BreakpointWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARA
         return DefWindowProc(hWnd, message, wParam, lParam);
     }
 
+    case WM_NOTIFY:
+    {
+        LPNMHDR pNmHdr = LPNMHDR(lParam);
+        switch (pNmHdr->idFrom)
+        {
+        case LISTVIEW_ID:
+            switch (pNmHdr->code)
+            {
+            case LVN_KEYDOWN:
+            {
+                LPNMLVKEYDOWN lpnkd = (LPNMLVKEYDOWN) pNmHdr;
+                switch (lpnkd->wVKey)
+                {
+                case VK_DELETE:
+                {
+                    const int i = ListView_GetNextItem(pNmHdr->hwndFrom, -1, LVNI_FOCUSED);
+                    if (i >= 0) // && MessageBox(hWnd, TEXT("Delete breakpoint?"), TEXT("Delete Breakpoint?"), MB_YESNO) == IDYES)
+                        ListView_DeleteItem(pNmHdr->hwndFrom, i);
+                    break;
+                }
+                }
+            }
+            }
+        }
+        return DefWindowProc(hWnd, message, wParam, lParam);
+    }
+
     case WM_BREAKPOINT_CHANGED:
     {
         const HWND hWndListView = GetDlgItem(hWnd, LISTVIEW_ID);
