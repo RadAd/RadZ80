@@ -225,7 +225,7 @@ int APIENTRY tWinMain(_In_ const HINSTANCE hInstance, _In_opt_ const HINSTANCE h
     BOOL bRet;
     while ((bRet = GetMessage(&msg, NULL, 0, 0)) > 0)
     {
-        if (!IsDialogMessage(g_hWndDlg, &msg) && !TranslateAccelerator(hWndMain, g_hAccel, &msg))
+        if (!TranslateAccelerator(hWndMain, g_hAccel, &msg) && !IsDialogMessage(g_hWndDlg, &msg))
         {
             TranslateMessage(&msg);
             DispatchMessage(&msg);

@@ -9,8 +9,6 @@
 #include "EditPlus.h"
 #include "WindowsPlus.h"
 
-#include "WindowMgr.h"
-
 extern HWND g_hWndDlg;
 
 namespace {
@@ -106,8 +104,6 @@ namespace {
 INT_PTR CALLBACK DlgRegistersProc(HWND hWndDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     Machine* m = reinterpret_cast<Machine*>(GetWindowLongPtr(hWndDlg, GWLP_USERDATA));
-
-    MenuWndProc(hWndDlg, message, wParam, lParam);
 
     switch (message)
     {
