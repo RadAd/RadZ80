@@ -239,6 +239,16 @@ BEGIN
     "R",            ID_VIEW_REGISTERS,      VIRTKEY, CONTROL, NOINVERT
 END
 
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_RADZ80              ICON                    "C:\\Users\\Adamg\\source\\repos\\RadAd\\RadZ80\\res\\z80.ico"
+
 #endif    // English (United Kingdom) resources
 /////////////////////////////////////////////////////////////////////////////
 

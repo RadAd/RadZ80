@@ -5,6 +5,8 @@
 #define IDD_REGISTERS                   101
 #define IDR_MAIN                        103
 #define IDD_INPUTBOX                    105
+#define IDI_ICON1                       107
+#define IDI_RADZ80                      107
 #define IDC_STEP                        1000
 #define IDC_RUN                         1001
 #define IDC_BREAK                       1002
@@ -66,7 +68,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        107
+#define _APS_NEXT_RESOURCE_VALUE        108
 #define _APS_NEXT_COMMAND_VALUE         40027
 #define _APS_NEXT_CONTROL_VALUE         1045
 #define _APS_NEXT_SYMED_VALUE           101

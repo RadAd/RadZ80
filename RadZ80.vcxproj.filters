@@ -56,4 +56,7 @@
       <Filter>Examples</Filter>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\z80.ico" />
+  </ItemGroup>
 </Project>

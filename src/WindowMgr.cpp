@@ -142,6 +142,7 @@ void RegisterWindows(HINSTANCE hInstance)
     wc.lpfnWndProc = TerminalWndProc;
     wc.lpszClassName = pTerminalWndClass;
     wc.lpszMenuName = MAKEINTRESOURCE(IDR_MAIN);
+    wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_RADZ80));
     RegisterClass(&wc);
     wc.lpszMenuName = nullptr;
 }

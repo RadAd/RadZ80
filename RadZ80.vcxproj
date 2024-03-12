@@ -160,6 +160,9 @@ if not exist Z80.patch.applied (
   <ItemGroup>
     <None Include="examples\helloworld.asm" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\z80.ico" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
