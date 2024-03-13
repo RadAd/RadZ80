@@ -177,7 +177,7 @@ INT_PTR CALLBACK DlgRegistersProc(HWND hWndDlg, UINT message, WPARAM wParam, LPA
             g_hWndDlg = hWndDlg;
         else if (g_hWndDlg == hWndDlg)
             g_hWndDlg = NULL;
-        return TRUE;;
+        return TRUE;
 
     case WM_UPDATE_STATE:
         //case WM_CPU_STEP_START:
