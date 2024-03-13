@@ -118,6 +118,23 @@ public:
     void SetBreakPoint(zuint16 address, bool set);
     void ToggleBreakPoint(zuint16 address) { SetBreakPoint(address, breakpoint.find(address) == breakpoint.end()); }
 
+    std::map<zuint16, std::tstring>::const_iterator FindSymbol(LPCTSTR s, bool bMatchCase) const
+    {
+        if (bMatchCase)
+        {
+            for (auto it = symbols.begin(); it != symbols.end(); ++it)
+                if (it->second == s)
+                    return it;
+        }
+        else
+        {
+            for (auto it = symbols.begin(); it != symbols.end(); ++it)
+                if (lstrcmpi(it->second.c_str(), s) == 0)
+                    return it;
+        }
+        return symbols.end();
+    }
+
     //zusize  cycles;
     zuint8  memory[65536];
     Z80     cpu;

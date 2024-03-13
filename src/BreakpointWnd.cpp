@@ -134,16 +134,11 @@ LRESULT CALLBACK BreakpointWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                             m->SetBreakPoint(zuint16(_tcstol(address, nullptr, 16)), TRUE);
                         else
                         {
-                            const auto itSymbol = [m, &address]() {
-                                for (auto it = m->symbols.begin(); it != m->symbols.end(); ++it)
-                                    if (it->second == address)
-                                        return it;
-                                return m->symbols.end();
-                                }();
-                                if (itSymbol != m->symbols.end())
-                                    m->SetBreakPoint(itSymbol->first, TRUE);
-                                else
-                                    MessageBox(hWnd, TEXT("Symbol not found."), TEXT("Not found"), MB_OK | MB_ICONERROR);
+                            const auto itSymbol = m->FindSymbol(address, false);
+                            if (itSymbol != m->symbols.end())
+                                m->SetBreakPoint(itSymbol->first, TRUE);
+                            else
+                                MessageBox(hWnd, TEXT("Symbol not found."), TEXT("Not found"), MB_OK | MB_ICONERROR);
                         }
                     }
                     break;
