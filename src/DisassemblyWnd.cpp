@@ -80,7 +80,7 @@ LRESULT CALLBACK DisassemblyWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
         LPFINDREPLACE pfr = reinterpret_cast<LPFINDREPLACE>(lParam);
         if (pfr->Flags & FR_FINDNEXT)
         {
-            const auto itSymbol = m->FindSymbol(pfr->lpstrFindWhat, pfr->Flags & FR_MATCHCASE);
+            const auto itSymbol = m->FindSymbol(pfr->lpstrFindWhat, pfr->Flags & FR_MATCHCASE, pfr->Flags & FR_WHOLEWORD);
             if (itSymbol != m->symbols.end())
             {
                 const HWND hWndListView = GetDlgItem(hWnd, LISTVIEW_ID);

@@ -14,6 +14,17 @@
 #define tstring string
 #endif
 
+#include <algorithm>
+inline bool findStringIC(const std::tstring& strHaystack, const std::tstring& strNeedle)
+{
+    auto it = std::search(
+        strHaystack.begin(), strHaystack.end(),
+        strNeedle.begin(), strNeedle.end(),
+        [](TCHAR ch1, TCHAR ch2) { return std::toupper(ch1) == std::toupper(ch2); }
+    );
+    return (it != strHaystack.end());
+}
+
 #define WM_UPDATE_STATE (WM_USER + 10)
 
 #define WM_CPU_STEP_START   (WM_USER + 101)
@@ -118,19 +129,37 @@ public:
     void SetBreakPoint(zuint16 address, bool set);
     void ToggleBreakPoint(zuint16 address) { SetBreakPoint(address, breakpoint.find(address) == breakpoint.end()); }
 
-    std::map<zuint16, std::tstring>::const_iterator FindSymbol(LPCTSTR s, bool bMatchCase) const
+    std::map<zuint16, std::tstring>::const_iterator FindSymbol(LPCTSTR s, bool bMatchCase, bool bMatchWholeWord) const
     {
-        if (bMatchCase)
+        if (bMatchWholeWord)
         {
-            for (auto it = symbols.begin(); it != symbols.end(); ++it)
-                if (it->second == s)
-                    return it;
+            if (bMatchCase)
+            {
+                for (auto it = symbols.begin(); it != symbols.end(); ++it)
+                    if (it->second == s)
+                        return it;
+            }
+            else
+            {
+                for (auto it = symbols.begin(); it != symbols.end(); ++it)
+                    if (lstrcmpi(it->second.c_str(), s) == 0)
+                        return it;
+            }
         }
         else
         {
-            for (auto it = symbols.begin(); it != symbols.end(); ++it)
-                if (lstrcmpi(it->second.c_str(), s) == 0)
-                    return it;
+            if (bMatchCase)
+            {
+                for (auto it = symbols.begin(); it != symbols.end(); ++it)
+                    if (it->second.find(s) != std::tstring::npos)
+                        return it;
+            }
+            else
+            {
+                for (auto it = symbols.begin(); it != symbols.end(); ++it)
+                    if (findStringIC(it->second.c_str(), s))
+                        return it;
+            }
         }
         return symbols.end();
     }
