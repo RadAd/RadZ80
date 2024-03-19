@@ -8,22 +8,13 @@
 #include <map>
 #include <string>
 
+#include "StrUtils.h"
+
 #ifdef UNICODE
 #define tstring wstring
 #else
 #define tstring string
 #endif
-
-#include <algorithm>
-inline bool findStringIC(const std::tstring& strHaystack, const std::tstring& strNeedle)
-{
-    auto it = std::search(
-        strHaystack.begin(), strHaystack.end(),
-        strNeedle.begin(), strNeedle.end(),
-        [](TCHAR ch1, TCHAR ch2) { return std::toupper(ch1) == std::toupper(ch2); }
-    );
-    return (it != strHaystack.end());
-}
 
 #define WM_UPDATE_STATE (WM_USER + 10)
 
@@ -129,38 +120,14 @@ public:
     void SetBreakPoint(zuint16 address, bool set);
     void ToggleBreakPoint(zuint16 address) { SetBreakPoint(address, breakpoint.find(address) == breakpoint.end()); }
 
-    std::map<zuint16, std::tstring>::const_iterator FindSymbol(LPCTSTR s, bool bMatchCase, bool bMatchWholeWord) const
+    std::map<zuint16, std::tstring>::const_iterator FindSymbol(const zuint16 address, LPCTSTR s, bool bMatchCase, bool bMatchWholeWord) const
     {
-        if (bMatchWholeWord)
-        {
-            if (bMatchCase)
-            {
-                for (auto it = symbols.begin(); it != symbols.end(); ++it)
-                    if (it->second == s)
-                        return it;
-            }
-            else
-            {
-                for (auto it = symbols.begin(); it != symbols.end(); ++it)
-                    if (lstrcmpi(it->second.c_str(), s) == 0)
-                        return it;
-            }
-        }
-        else
-        {
-            if (bMatchCase)
-            {
-                for (auto it = symbols.begin(); it != symbols.end(); ++it)
-                    if (it->second.find(s) != std::tstring::npos)
-                        return it;
-            }
-            else
-            {
-                for (auto it = symbols.begin(); it != symbols.end(); ++it)
-                    if (findStringIC(it->second.c_str(), s))
-                        return it;
-            }
-        }
+        const auto begin = address == zuint16(-1) ? symbols.begin() : symbols.upper_bound(address);
+        const StrCompareT comp = GeStrComparator(bMatchCase, bMatchWholeWord);
+        //return std::find(begin, symbols.end(), [comp, s](const std::map<zuint16, std::tstring>::const_reference item) { return comp(item.second.c_str(), s); });
+        for (std::map<zuint16, std::tstring>::const_iterator it = begin; it != symbols.end(); ++it)
+            if (comp(it->second.c_str(), s))
+                return it;
         return symbols.end();
     }
 

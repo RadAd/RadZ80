@@ -136,6 +136,7 @@ if not exist Z80.patch.applied (
     <ClCompile Include="src\WindowMgr.cpp" />
     <ClCompile Include="src\WindowsPlus.c" />
     <ClCompile Include="src\z80_disassembler.c" />
+    <ClCompile Include="src\StrUtils.cpp" />
     <ClCompile Include="Z80\sources\Z80.c" />
   </ItemGroup>
   <ItemGroup>
@@ -152,6 +153,7 @@ if not exist Z80.patch.applied (
     <ClInclude Include="src\Utils.h" />
     <ClInclude Include="src\WindowMgr.h" />
     <ClInclude Include="src\WindowsPlus.h" />
+    <ClInclude Include="src\StrUtils.h" />
     <ClInclude Include="Z80\API\Z80.h" />
   </ItemGroup>
   <ItemGroup>

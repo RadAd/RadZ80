@@ -80,10 +80,15 @@ LRESULT CALLBACK DisassemblyWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
         LPFINDREPLACE pfr = reinterpret_cast<LPFINDREPLACE>(lParam);
         if (pfr->Flags & FR_FINDNEXT)
         {
-            const auto itSymbol = m->FindSymbol(pfr->lpstrFindWhat, pfr->Flags & FR_MATCHCASE, pfr->Flags & FR_WHOLEWORD);
+            const HWND hWndListView = GetDlgItem(hWnd, LISTVIEW_ID);
+            const int nFocusedItem = ListView_GetNextItem(hWndListView, -1, LVIS_FOCUSED);
+            const zuint16 address = (zuint16) ListView_GetItemParam(hWndListView, nFocusedItem);
+            auto itSymbol = m->FindSymbol(address, pfr->lpstrFindWhat, pfr->Flags & FR_MATCHCASE, pfr->Flags & FR_WHOLEWORD);
+            if (itSymbol == m->symbols.end())
+                itSymbol = m->FindSymbol(-1, pfr->lpstrFindWhat, pfr->Flags & FR_MATCHCASE, pfr->Flags & FR_WHOLEWORD);
+
             if (itSymbol != m->symbols.end())
             {
-                const HWND hWndListView = GetDlgItem(hWnd, LISTVIEW_ID);
                 const zuint16 addr = itSymbol->first;
                 const int nItem = FindItem(hWndListView, addr);
                 if (nItem >= 0)
