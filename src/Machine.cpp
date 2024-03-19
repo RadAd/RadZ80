@@ -152,6 +152,7 @@ Machine::Machine()
     cpu.ret = MachineRet;
     cpu.out = MachineOut;
     cpu.hook = MachineHook;
+    dobreak = false;
     breakonret = 0xFFFF;
     runz80 = std::thread(RunZ80, this);
 }

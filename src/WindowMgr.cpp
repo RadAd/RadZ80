@@ -13,7 +13,7 @@
 
 #include "resource.h"
 
-extern HACCEL g_hAccel;
+extern std::map<HWND, HACCEL> g_hAccel;
 
 namespace
 {
@@ -279,7 +279,9 @@ LRESULT CALLBACK MenuWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
         const BOOL bWindow = HIWORD(lParam);
         if (!bWindow)
         {
-            AddAccel(hMenu, g_hAccel);
+            auto itAccel = g_hAccel.find(hWnd);
+            if (itAccel != g_hAccel.end())
+                AddAccel(hMenu, itAccel->second);
             switch (nItem)
             {
             case 1:

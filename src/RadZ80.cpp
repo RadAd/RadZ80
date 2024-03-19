@@ -149,7 +149,7 @@ void LoadMAP(LPCTSTR filename, std::map<zuint16, std::tstring>& symbols)
     }
 }
 
-HACCEL g_hAccel = NULL;
+std::map<HWND, HACCEL> g_hAccel;
 
 #ifdef _UNICODE
 #define tWinMain wWinMain
@@ -219,13 +219,21 @@ int APIENTRY tWinMain(_In_ const HINSTANCE hInstance, _In_opt_ const HINSTANCE h
     if (!loaded)
         MessageBox(hWndMain, TEXT("No program loaded"), TEXT("Rad Z80"), MB_OK | MB_ICONERROR);
 
-    g_hAccel = LoadAccelerators(NULL, MAKEINTRESOURCE(IDR_MAIN));
+    g_hAccel.insert(std::make_pair(hWndMain, LoadAccelerators(NULL, MAKEINTRESOURCE(IDR_MAIN))));
 
     MSG msg;
     BOOL bRet;
     while ((bRet = GetMessage(&msg, NULL, 0, 0)) > 0)
     {
-        if (!TranslateAccelerator(hWndMain, g_hAccel, &msg) && !IsDialogMessage(g_hWndDlg, &msg))
+        bool found = false;
+        for (auto accelpair : g_hAccel)
+            if (TranslateAccelerator(accelpair.first, accelpair.second, &msg))
+            {
+                found = true;
+                break;
+            }
+
+        if (!found && !IsDialogMessage(g_hWndDlg, &msg))
         {
             TranslateMessage(&msg);
             DispatchMessage(&msg);

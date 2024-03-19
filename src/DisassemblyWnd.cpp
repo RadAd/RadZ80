@@ -10,7 +10,15 @@
 #include "WindowsPlus.h"
 #include "Utils.h"
 
+#include "resource.h"
+
 TCHAR* pDisassemblyWndClass = TEXT("RadDisassemblyWnd");
+const HACCEL hAccelDisassembly = LoadAccelerators(NULL, MAKEINTRESOURCE(IDR_DISASSEMBLY));
+
+extern HWND g_hWndDlg;
+extern std::map<HWND, HACCEL> g_hAccel;
+
+const UINT WMFindString = RegisterWindowMessage(FINDMSGSTRING);
 
 #define LISTVIEW_ID (100)
 
@@ -34,21 +42,73 @@ namespace {
         ListView_GetItemRect(hWndListView, nItem, &rc, LVIR_BOUNDS);
         InvalidateRect(hWndListView, &rc, TRUE);
     }
+
+    UINT_PTR FRHookProc(HWND hWnd, UINT nCode, WPARAM wParam, LPARAM lParam)
+    {
+        switch (nCode)
+        {
+        case WM_INITDIALOG:
+            return TRUE;
+
+        case WM_ACTIVATE:
+            if (LOWORD(wParam))
+                g_hWndDlg = hWnd;
+            else if (g_hWndDlg == hWnd)
+                g_hWndDlg = NULL;
+            return TRUE;;
+
+        default:
+            return 0;
+        }
+    }
+
+    struct DisassemblyWndData
+    {
+        Machine* m;
+        FINDREPLACE fr;
+        TCHAR FindBuffer[100];
+    };
 }
 
 LRESULT CALLBACK DisassemblyWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    Machine* m = reinterpret_cast<Machine*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+    DisassemblyWndData* data = reinterpret_cast<DisassemblyWndData*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+    Machine* m = data ? data->m : nullptr;
 
-    switch (message)
+    if (message == WMFindString)
+    {
+        LPFINDREPLACE pfr = reinterpret_cast<LPFINDREPLACE>(lParam);
+        if (pfr->Flags & FR_FINDNEXT)
+        {
+            const auto itSymbol = m->FindSymbol(pfr->lpstrFindWhat, pfr->Flags & FR_MATCHCASE);
+            if (itSymbol != m->symbols.end())
+            {
+                const HWND hWndListView = GetDlgItem(hWnd, LISTVIEW_ID);
+                const zuint16 addr = itSymbol->first;
+                const int nItem = FindItem(hWndListView, addr);
+                if (nItem >= 0)
+                {
+                    ListView_SetItemState(hWndListView, -1, 0, LVIS_SELECTED);
+                    ListView_SetItemState(hWndListView, nItem, LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
+                    ListView_EnsureVisible(hWndListView, nItem, FALSE);
+                }
+            }
+            else
+                PlaySound((LPCWSTR) SND_ALIAS_SYSTEMASTERISK, NULL, SND_ALIAS_ID);
+        }
+        return DefWindowProc(hWnd, message, wParam, lParam);
+    }
+    else switch (message)
     {
     case WM_CREATE:
     {
+        data = new DisassemblyWndData();
+
         const auto Cursor = Auto(SetCursor, LoadCursor(NULL, IDC_WAIT));
 
         const CREATESTRUCT* cs = reinterpret_cast<LPCREATESTRUCT>(lParam);
-        m = reinterpret_cast<Machine*>(cs->lpCreateParams);
-        SetWindowLongPtr(hWnd, GWLP_USERDATA, LONG_PTR(m));
+        m = data->m = reinterpret_cast<Machine*>(cs->lpCreateParams);
+        SetWindowLongPtr(hWnd, GWLP_USERDATA, LONG_PTR(data));
         m->Register(hWnd);
 
         RECT rcClient;
@@ -116,9 +176,11 @@ LRESULT CALLBACK DisassemblyWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
     case WM_DESTROY:
     {
         const HWND hWndListView = GetDlgItem(hWnd, LISTVIEW_ID);
-        HFONT hFont = GetWindowFont(hWndListView);
+        const HFONT hFont = GetWindowFont(hWndListView);
         DeleteObject(hFont);
         m->Unregister(hWnd);
+        delete data;
+        SetWindowLongPtr(hWnd, GWLP_USERDATA, 0);
         return DefWindowProc(hWnd, message, wParam, lParam);
     }
 
@@ -176,8 +238,9 @@ LRESULT CALLBACK DisassemblyWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
     case WM_CPU_STEP_START:
     case WM_CPU_STEP_STOP:
     {
+        _ASSERT(m != nullptr);
         const HWND hWndListView = GetDlgItem(hWnd, LISTVIEW_ID);
-        const zuint addr = Z80_PC(m->cpu);
+        const zuint16 addr = Z80_PC(m->cpu);
         const int nItem = FindItem(hWndListView, addr);
         if (nItem >= 0)
         {
@@ -190,7 +253,7 @@ LRESULT CALLBACK DisassemblyWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
     case WM_BREAKPOINT_CHANGED:
     {
         const HWND hWndListView = GetDlgItem(hWnd, LISTVIEW_ID);
-        const zuint addr = zuint(wParam);
+        const zuint16 addr = zuint16(wParam);
         const bool isSet = bool(lParam);
         const int nItem = FindItem(hWndListView, addr);
         if (nItem >= 0)
@@ -203,10 +266,11 @@ LRESULT CALLBACK DisassemblyWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
 
     case WM_REG_CHANGED:
     {
+        _ASSERT(m != nullptr);
         if ((Reg16) lParam == Reg16::PC)
         {
             const HWND hWndListView = GetDlgItem(hWnd, LISTVIEW_ID);
-            const zuint addr = Z80_PC(m->cpu);
+            const zuint16 addr = Z80_PC(m->cpu);
             const int nItem = FindItem(hWndListView, addr);
             if (nItem >= 0)
                 InvalidateItem(hWndListView, nItem);
@@ -219,6 +283,42 @@ LRESULT CALLBACK DisassemblyWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
         const HWND hWndListView = GetDlgItem(hWnd, LISTVIEW_ID);
         SetWindowPos(hWndListView, NULL, 0, 0, LOWORD(lParam), HIWORD(lParam), SWP_NOZORDER);
         return DefWindowProc(hWnd, message, wParam, lParam);
+    }
+
+    case WM_ACTIVATE:
+        if (LOWORD(wParam))
+            g_hAccel.insert(std::make_pair(hWnd, LoadAccelerators(NULL, MAKEINTRESOURCE(IDR_DISASSEMBLY))));
+        else
+            g_hAccel.erase(hWnd);
+        return TRUE;;
+
+    case WM_COMMAND:
+    {
+        _ASSERT(data != nullptr);
+        const int nIDDlgItem = LOWORD(wParam);
+        switch (nIDDlgItem)
+        {
+        case ID_FIND:
+        {
+            const HWND hWndFind = FindOwnedWindow(hWnd, TEXT("#32770"), TEXT("Find"));
+            if (hWndFind)
+                SetActiveWindow(hWndFind);
+            else
+            {
+                data->fr.lStructSize = sizeof(FINDREPLACE);
+                data->fr.hwndOwner = hWnd;
+                data->fr.Flags = FR_DOWN;
+                data->fr.wFindWhatLen = ARRAYSIZE(data->FindBuffer);
+                data->fr.lpstrFindWhat = data->FindBuffer;
+                data->fr.lpstrFindWhat[0] = TEXT('\0');
+                data->fr.Flags |= FR_ENABLEHOOK;
+                data->fr.lpfnHook = FRHookProc;
+
+                FindText(&data->fr);
+            }
+            break;
+        }
+        }
     }
 
     default:
