@@ -134,7 +134,7 @@ LRESULT CALLBACK BreakpointWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                             m->SetBreakPoint(zuint16(_tcstol(address, nullptr, 16)), TRUE);
                         else
                         {
-                            const auto itSymbol = m->FindSymbol(-1, address, false, true);
+                            const auto itSymbol = m->FindSymbol(-1, address, false, true, true);
                             if (itSymbol != m->symbols.end())
                                 m->SetBreakPoint(itSymbol->first, TRUE);
                             else

@@ -83,9 +83,9 @@ LRESULT CALLBACK DisassemblyWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
             const HWND hWndListView = GetDlgItem(hWnd, LISTVIEW_ID);
             const int nFocusedItem = ListView_GetNextItem(hWndListView, -1, LVIS_FOCUSED);
             const zuint16 address = (zuint16) ListView_GetItemParam(hWndListView, nFocusedItem);
-            auto itSymbol = m->FindSymbol(address, pfr->lpstrFindWhat, pfr->Flags & FR_MATCHCASE, pfr->Flags & FR_WHOLEWORD);
+            auto itSymbol = m->FindSymbol(address, pfr->lpstrFindWhat, pfr->Flags & FR_MATCHCASE, pfr->Flags & FR_WHOLEWORD, pfr->Flags & FR_DOWN);
             if (itSymbol == m->symbols.end())
-                itSymbol = m->FindSymbol(-1, pfr->lpstrFindWhat, pfr->Flags & FR_MATCHCASE, pfr->Flags & FR_WHOLEWORD);
+                itSymbol = m->FindSymbol(-1, pfr->lpstrFindWhat, pfr->Flags & FR_MATCHCASE, pfr->Flags & FR_WHOLEWORD, pfr->Flags & FR_DOWN);
 
             if (itSymbol != m->symbols.end())
             {
@@ -119,7 +119,7 @@ LRESULT CALLBACK DisassemblyWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
         RECT rcClient;
         GetClientRect(hWnd, &rcClient);
 
-        HWND hWndListView = ListView_Create(hWnd, rcClient, WS_CHILD | WS_VISIBLE | LVS_REPORT, LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT, LISTVIEW_ID);
+        HWND hWndListView = ListView_Create(hWnd, rcClient, WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_SHOWSELALWAYS, LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT, LISTVIEW_ID);
         SetFocus(hWndListView);
 
         HFONT hFont = GetWindowFont(hWndListView);

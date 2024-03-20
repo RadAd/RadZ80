@@ -120,14 +120,24 @@ public:
     void SetBreakPoint(zuint16 address, bool set);
     void ToggleBreakPoint(zuint16 address) { SetBreakPoint(address, breakpoint.find(address) == breakpoint.end()); }
 
-    std::map<zuint16, std::tstring>::const_iterator FindSymbol(const zuint16 address, LPCTSTR s, bool bMatchCase, bool bMatchWholeWord) const
+    std::map<zuint16, std::tstring>::const_iterator FindSymbol(const zuint16 address, LPCTSTR s, bool bMatchCase, bool bMatchWholeWord, bool bDown) const
     {
-        const auto begin = address == zuint16(-1) ? symbols.begin() : symbols.upper_bound(address);
         const StrCompareT comp = GeStrComparator(bMatchCase, bMatchWholeWord);
-        //return std::find(begin, symbols.end(), [comp, s](const std::map<zuint16, std::tstring>::const_reference item) { return comp(item.second.c_str(), s); });
-        for (std::map<zuint16, std::tstring>::const_iterator it = begin; it != symbols.end(); ++it)
-            if (comp(it->second.c_str(), s))
-                return it;
+        if (bDown)
+        {
+            const auto begin = address == zuint16(-1) ? symbols.begin() : symbols.upper_bound(address);
+            //return std::find(begin, symbols.end(), [comp, s](const std::map<zuint16, std::tstring>::const_reference item) { return comp(item.second.c_str(), s); });
+            for (std::map<zuint16, std::tstring>::const_iterator it = begin; it != symbols.end(); ++it)
+                if (comp(it->second.c_str(), s))
+                    return it;
+        }
+        else
+        {
+            const auto begin = address == zuint16(-1) ? symbols.rbegin() : std::make_reverse_iterator(symbols.lower_bound(address));
+            for (std::map<zuint16, std::tstring>::const_reverse_iterator it = begin; it != symbols.rend(); ++it)
+                if (comp(it->second.c_str(), s))
+                    return std::next(it).base();
+        }
         return symbols.end();
     }
 
