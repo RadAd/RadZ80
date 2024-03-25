@@ -97,6 +97,7 @@ LRESULT CALLBACK DisassemblyWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
                     ListView_SetItemState(hWndListView, nItem, LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
                     ListView_EnsureVisible(hWndListView, nItem, FALSE);
                 }
+                // ISSUE If a symbol is found but it is not in the list then it can't find past it
             }
             else
                 PlaySound((LPCWSTR) SND_ALIAS_SYSTEMASTERISK, NULL, SND_ALIAS_ID);

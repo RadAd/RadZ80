@@ -4,10 +4,7 @@
 #include <tchar.h>
 #include <CommCtrl.h>
 #include <fstream>
-#include <memory>
 #include <string>
-#include <vector>
-#include <sstream>
 
 #include "Machine.h"
 #include "WindowsPlus.h"
@@ -15,12 +12,6 @@
 //#include "MainDlg.h"
 #include "TerminalWnd.h"
 #include "WindowMgr.h"
-
-#ifdef UNICODE
-#define tifstream wifstream
-#else
-#define tifstream ifstream
-#endif
 
 HWND g_hWndDlg = NULL;
 
@@ -68,32 +59,6 @@ void LoadBIN(LPCTSTR filename, zuint8* mem)
     zuint16 offset = 0;
     while (f.read((char*) mem + offset, sizeof(*mem) * chunk))
         offset += chunk;
-}
-
-inline std::vector<std::tstring> split(const std::tstring& str, TCHAR delim)
-{
-    std::vector<std::tstring> split;
-    std::wstringstream ss(str);
-    std::tstring sstr;
-    while (std::getline(ss, sstr, delim))
-        if (!sstr.empty())
-            split.push_back(sstr);
-    return split;
-}
-
-inline std::tstring ltrim(std::tstring s) {
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](TCHAR ch) {
-        return !std::isspace(ch);
-        }));
-    return s;
-}
-
-// trim from end (in place)
-inline std::tstring rtrim(std::tstring s) {
-    s.erase(std::find_if(s.rbegin(), s.rend(), [](TCHAR ch) {
-        return !std::isspace(ch);
-        }).base(), s.end());
-    return s;
 }
 
 void LoadLST(LPCTSTR filename, std::map<zuint16, std::tstring>& symbols)
@@ -149,6 +114,58 @@ void LoadMAP(LPCTSTR filename, std::map<zuint16, std::tstring>& symbols)
     }
 }
 
+// https://en.wikipedia.org/wiki/Intel_HEX
+void LoadIHX(LPCTSTR filename, zuint8* mem)
+{
+    std::tifstream f(filename);
+    std::tstring line;
+    while (std::getline(f, line))
+    {
+        const size_t s = line.find(':');
+        if (s != std::tstring::npos)
+        {
+            size_t offset = s + 1;
+            zuint8 sum = 0;
+            const int count = std::stoi(line.substr(offset, 2), nullptr, 16);
+            sum += count;
+            offset += 2;
+            const zuint16 address = std::stoi(line.substr(offset, 4), nullptr, 16);
+            sum += (address >> 8) & 0xFF;
+            sum += address & 0xFF;
+            offset += 4;
+            const int type = std::stoi(line.substr(offset, 2), nullptr, 16);
+            sum += type;
+            offset += 2;
+            switch (type)
+            {
+            case 0: // Data
+                for (size_t i = 0; i < count; ++i)
+                {
+                    const zuint8 data = std::stoi(line.substr(offset, 2), nullptr, 16);
+                    offset += 2;
+                    mem[address + i] = data;
+                    sum += data;
+                }
+                break;
+
+            case 1: // End of file
+                if (count != 0)
+                    MessageBox(NULL, TEXT("Expect byte count zero at end of file"), TEXT("IHX Error"), MB_OK | MB_ICONERROR);
+                break;
+
+            default:
+                MessageBox(NULL, TEXT("Unsupported record type"), TEXT("IHX Error"), MB_OK | MB_ICONERROR);
+                break;
+            }
+            const zuint8 checksum = std::stoi(line.substr(offset, 2), nullptr, 16);
+            offset += 2;
+            const zuint8 check = zuint8(~sum) + 1;
+            if (checksum != check)
+                MessageBox(NULL, TEXT("Error in checksum"), TEXT("IHX Error"), MB_OK | MB_ICONERROR);
+        }
+    }
+}
+
 std::map<HWND, HACCEL> g_hAccel;
 
 #ifdef _UNICODE
@@ -182,6 +199,12 @@ int APIENTRY tWinMain(_In_ const HINSTANCE hInstance, _In_opt_ const HINSTANCE h
         else if (ext && _tcsicmp(ext, TEXT(".bin")) == 0)    // from sdcc
         {
             LoadBIN(arg, m->memory);
+            start = 0;
+            loaded = true;
+        }
+        else if (ext && _tcsicmp(ext, TEXT(".ihx")) == 0)    // from sdcc
+        {
+            LoadIHX(arg, m->memory);
             start = 0;
             loaded = true;
         }
