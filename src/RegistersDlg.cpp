@@ -243,6 +243,14 @@ INT_PTR CALLBACK DlgRegistersProc(HWND hWndDlg, UINT message, WPARAM wParam, LPA
         int nIDDlgItem = LOWORD(wParam);
         switch (nIDDlgItem)
         {
+        case IDC_STEP:
+        case IDC_STEP_OVER:
+        case IDC_STEP_OUT:
+        case IDC_RUN:
+        case IDC_BREAK:
+            SendMessage(GetParent(hWndDlg), message, wParam, lParam);
+            break;
+
         case IDOK:
         {
             const HWND hWnd = GetFocus();
