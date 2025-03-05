@@ -319,11 +319,38 @@ LRESULT CALLBACK DisassemblyWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
             g_hAccel.erase(hWnd);
         return TRUE;;
 
+    case WM_CONTEXTMENU:
+    {
+        const HINSTANCE hInstance = GetModuleHandle(NULL);
+        HMENU hMenu = LoadPopupMenu(hInstance, MAKEINTRESOURCE(IDR_DISASSEMBLY));
+        TrackPopupMenu(hMenu, TPM_LEFTALIGN | TPM_TOPALIGN | TPM_LEFTBUTTON, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), 0, hWnd, nullptr);
+        DestroyMenu(hMenu);
+        return 0;
+    }
+
+    case WM_INITMENUPOPUP:
+    {
+        const HMENU hMenu = reinterpret_cast<HMENU>(wParam);
+        const int nItem = LOWORD(lParam);
+        const BOOL bWindow = HIWORD(lParam);
+        if (!bWindow)
+        {
+            const HWND hWndListView = GetDlgItem(hWnd, LISTVIEW_ID);
+            const int i = ListView_GetNextItem(hWndListView, -1, LVNI_FOCUSED);
+            const zuint16 address = zuint16(ListView_GetItemParam(hWndListView, i));
+            CheckMenuItem(hMenu, ID_TOGGLEBREAKPOINT, MF_BYCOMMAND | (m->IsBreakPoint(address) ? MF_CHECKED : MF_UNCHECKED));
+
+            return FALSE;
+        }
+        else
+            return TRUE;
+    }
+
     case WM_COMMAND:
     {
         _ASSERT(data != nullptr);
-        const int nIDDlgItem = LOWORD(wParam);
-        switch (nIDDlgItem)
+        const int nID = LOWORD(wParam);
+        switch (nID)
         {
         case ID_FIND:
         {
@@ -343,6 +370,26 @@ LRESULT CALLBACK DisassemblyWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
 
                 FindText(&data->fr);
             }
+            break;
+        }
+        case ID_TOGGLEBREAKPOINT:
+        {
+            const HWND hWndListView = GetDlgItem(hWnd, LISTVIEW_ID);
+            const int i = ListView_GetNextItem(hWndListView, -1, LVNI_FOCUSED);
+            const zuint16 address = zuint16(ListView_GetItemParam(hWndListView, i));
+            m->ToggleBreakPoint(address);
+            break;
+        }
+        case ID_SETNEXTSTATEMENT:
+        {
+            const HWND hWndListView = GetDlgItem(hWnd, LISTVIEW_ID);
+            const int i = ListView_GetNextItem(hWndListView, -1, LVNI_FOCUSED);
+            const zuint16 address = zuint16(ListView_GetItemParam(hWndListView, i));
+            const Reg16 reg = Reg16::PC;
+            zuint16* val = GetRegU16(reg, m);
+            m->SendRegChanged(reg); // Before
+            *val = address;
+            m->SendRegChanged(reg); // After
             break;
         }
         }

@@ -99,6 +99,15 @@ inline int BinarySearch(GetValue* gv, void* context, const int n, const int key)
 
 BOOL InputBox(HWND hWnd, LPCTSTR strPrompt, LPCTSTR strTitle, LPTSTR strText, INT cchMaxText);
 
+inline HMENU LoadPopupMenu(_In_opt_ HINSTANCE hInstance, _In_ LPCTSTR lpMenuName)
+{
+    const HMENU hMenu = LoadMenu(hInstance, lpMenuName);
+    const HMENU hPopupMenu = GetSubMenu(hMenu, 0);
+    RemoveMenu(hMenu, 0, MF_BYPOSITION);
+    DestroyMenu(hMenu);
+    return hPopupMenu;
+}
+
 #ifdef __cplusplus
 }
 #endif

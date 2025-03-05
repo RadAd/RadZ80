@@ -219,6 +219,15 @@ BEGIN
     END
 END
 
+IDR_DISASSEMBLY MENU
+BEGIN
+    POPUP "Context Menu"
+    BEGIN
+        MENUITEM "Breakpoint\tF9",              ID_TOGGLEBREAKPOINT
+        MENUITEM "Set Next Statement\tCtrl+F10", ID_SETNEXTSTATEMENT
+    END
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
