@@ -36,6 +36,30 @@ namespace {
         }
     }
 
+    int GetRegDlgItem(Reg8 r)
+    {
+        switch (r)
+        {
+        case Reg8::A: return IDC_REG_A;
+        case Reg8::F: return IDC_REG_F;
+        case Reg8::B: return IDC_REG_B;
+        case Reg8::C: return IDC_REG_C;
+        case Reg8::D: return IDC_REG_D;
+        case Reg8::E: return IDC_REG_E;
+        case Reg8::H: return IDC_REG_H;
+        case Reg8::L: return IDC_REG_L;
+        case Reg8::A_: return IDC_REG_A_;
+        case Reg8::F_: return IDC_REG_F_;
+        case Reg8::B_: return IDC_REG_B_;
+        case Reg8::C_: return IDC_REG_C_;
+        case Reg8::D_: return IDC_REG_D_;
+        case Reg8::E_: return IDC_REG_E_;
+        case Reg8::H_: return IDC_REG_H_;
+        case Reg8::L_: return IDC_REG_L_;
+        default: return 0;
+        }
+    }
+
     Reg16 GetRegU16(int nIDDlgItem)
     {
         switch (nIDDlgItem)
@@ -45,6 +69,18 @@ namespace {
         case IDC_REG_IX: return Reg16::IX;
         case IDC_REG_IY: return Reg16::IY;
         default: return Reg16::None;
+        }
+    }
+
+    int GetRegDlgItem(Reg16 r)
+    {
+        switch (r)
+        {
+        case Reg16::PC: return IDC_REG_PC;
+        case Reg16::SP: return IDC_REG_SP;
+        case Reg16::IX: return IDC_REG_IX;
+        case Reg16::IY: return IDC_REG_IY;
+        default: return 0;
         }
     }
 
@@ -370,13 +406,20 @@ INT_PTR CALLBACK DlgRegistersProc(HWND hWndDlg, UINT message, WPARAM wParam, LPA
             case IDC_REG_A_: case IDC_REG_F_: case IDC_REG_B_: case IDC_REG_C_: case IDC_REG_D_: case IDC_REG_E_: case IDC_REG_H_: case IDC_REG_L_:
             {
                 const zuint8 val = GetDlgItemHexU8(hWndDlg, GetWindowID(hEdit));
-                StringCchPrintf(lpNmtdi->szText, ARRAYSIZE(lpNmtdi->szText), TEXT("Dec: %d"), val);
+                if (std::isprint(val))
+                    StringCchPrintf(lpNmtdi->szText, ARRAYSIZE(lpNmtdi->szText), TEXT("Dec: %d  Ascii: %c"), val, val);
+                else
+                    StringCchPrintf(lpNmtdi->szText, ARRAYSIZE(lpNmtdi->szText), TEXT("Dec: %d"), val);
                 break;
             }
             case IDC_REG_PC: case IDC_REG_SP: case IDC_REG_IX: case IDC_REG_IY:
             {
                 const zuint16 val = GetDlgItemHexU16(hWndDlg, GetWindowID(hEdit));
-                StringCchPrintf(lpNmtdi->szText, ARRAYSIZE(lpNmtdi->szText), TEXT("Dec: %d"), val);
+                auto it = m->symbols.find(val);
+                if (it != m->symbols.end())
+                    StringCchPrintf(lpNmtdi->szText, ARRAYSIZE(lpNmtdi->szText), TEXT("Dec: %d[%s]"), val, it->second.c_str());
+                else
+                    StringCchPrintf(lpNmtdi->szText, ARRAYSIZE(lpNmtdi->szText), TEXT("Dec: %d"), val);
                 break;
             }
             }
@@ -385,6 +428,34 @@ INT_PTR CALLBACK DlgRegistersProc(HWND hWndDlg, UINT message, WPARAM wParam, LPA
         }
         return TRUE;
     }
+
+    case WM_REG_CHANGED:
+        if (lParam >= (LPARAM)Reg16::None)
+        {
+            const Reg16 r = (Reg16)lParam;
+            const int nIDDlgItem = GetRegDlgItem(r);
+            SetDlgItemHexU16(hWndDlg, nIDDlgItem, *GetRegU16(r, m));
+        }
+        else
+        {
+            const Reg8 r = (Reg8)lParam;
+            const int nIDDlgItem = GetRegDlgItem(r);
+            SetDlgItemHexU8(hWndDlg, nIDDlgItem, *GetRegU8(r, m));
+
+            if (r == Reg8::F)
+            {
+                const zuint8 regf = Z80_F(m->cpu);
+                for (int nIDDlgItem : { IDC_FLAG_SF, IDC_FLAG_ZF, IDC_FLAG_YF, IDC_FLAG_HF, IDC_FLAG_XF, IDC_FLAG_PF, IDC_FLAG_NF, IDC_FLAG_CF })
+                    Button_SetCheck(GetDlgItem(hWndDlg, nIDDlgItem), regf & GetFlag(nIDDlgItem) ? BST_CHECKED : BST_UNCHECKED);
+            }
+            else if (r == Reg8::F_)
+            {
+                const zuint8 regf_ = Z80_F_(m->cpu);
+                for (int nIDDlgItem : { IDC_FLAG_SF_, IDC_FLAG_ZF_, IDC_FLAG_YF_, IDC_FLAG_HF_, IDC_FLAG_XF_, IDC_FLAG_PF_, IDC_FLAG_NF_, IDC_FLAG_CF_ })
+                    Button_SetCheck(GetDlgItem(hWndDlg, nIDDlgItem), regf_ & GetFlag(nIDDlgItem) ? BST_CHECKED : BST_UNCHECKED);
+            }
+        }
+        return 0;
 
     default:
         return FALSE;

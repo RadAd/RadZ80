@@ -1,7 +1,8 @@
 #include "DisassemblyWnd.h"
 
 #include <Windowsx.h>
-#include <strsafe.h>
+//#include <strsafe.h>
+#include <tchar.h>
 
 #include "Machine.h"
 //#include "EditPlus.h"
@@ -204,12 +205,23 @@ LRESULT CALLBACK DisassemblyWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
             {
             case LVN_KEYDOWN:
             {
+                _ASSERT(m != nullptr);
                 LPNMLVKEYDOWN lpnkd = (LPNMLVKEYDOWN)pNmHdr;
                 if (lpnkd->wVKey == VK_F9)
                 {
                     const int i = ListView_GetNextItem(pNmHdr->hwndFrom, -1, LVNI_FOCUSED);
                     const zuint16 address = zuint16(ListView_GetItemParam(pNmHdr->hwndFrom, i));
                     m->ToggleBreakPoint(address);
+                }
+                else if (lpnkd->wVKey == VK_F10 && (GetKeyState(VK_CONTROL) & 0x8000))
+                {
+                    const int i = ListView_GetNextItem(pNmHdr->hwndFrom, -1, LVNI_FOCUSED);
+                    const zuint16 address = zuint16(ListView_GetItemParam(pNmHdr->hwndFrom, i));
+                    const Reg16 reg = Reg16::PC;
+                    zuint16* val = GetRegU16(reg, m);
+                    m->SendRegChanged(reg); // Before
+                    *val = address;
+                    m->SendRegChanged(reg); // After
                 }
                 break;
             }
@@ -229,6 +241,15 @@ LRESULT CALLBACK DisassemblyWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
 
                 case CDDS_SUBITEM | CDDS_ITEMPREPAINT:
                     lplvcd->clrTextBk = GetItemBkColor(m, address);
+                    if (lplvcd->iSubItem == 2)
+                    {
+                        TCHAR text[100];
+                        ListView_GetItemText(pNmHdr->hwndFrom, (int)lplvcd->nmcd.dwItemSpec, lplvcd->iSubItem, text, ARRAYSIZE(text));
+                        lplvcd->clrText = (_tcsnccmp(text, TEXT("._"), 2) == 0 || _tcsnccmp(text, TEXT("_"), 1) == 0)
+                            ? GetSysColor(COLOR_GRAYTEXT) : GetSysColor(COLOR_WINDOWTEXT);
+                    }
+                    else
+                        lplvcd->clrText = GetSysColor(COLOR_WINDOWTEXT);
                     return CDRF_DODEFAULT;
                 }
                 return DefWindowProc(hWnd, message, wParam, lParam);

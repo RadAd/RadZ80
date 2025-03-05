@@ -52,11 +52,10 @@ zuint16 LoadCMD(LPCTSTR filename, zuint8* mem)
     return pc;
 }
 
-void LoadBIN(LPCTSTR filename, zuint8* mem)
+void LoadBIN(LPCTSTR filename, zuint8* mem, zuint16 offset)
 {
     std::ifstream f(filename, std::ios::binary);
     const zuint16 chunk = 256u;
-    zuint16 offset = 0;
     while (f.read((char*) mem + offset, sizeof(*mem) * chunk))
         offset += chunk;
 }
@@ -80,6 +79,23 @@ void LoadLST(LPCTSTR filename, std::map<zuint16, std::tstring>& symbols)
         else if (line == TEXT("Symbol Table:"))
         {
             in_symbols = true;
+        }
+    }
+}
+
+void LoadLBL(LPCTSTR filename, std::map<zuint16, std::tstring>& symbols)
+{
+    std::tifstream f(filename);
+    std::tstring line;
+    while (std::getline(f, line))
+    {
+        if (!line.empty())
+        {
+            const size_t pos1 = line.find(TEXT(' '));
+            const size_t pos2 = line.find(TEXT(' '), pos1 + 1);
+            const std::tstring arg1 = line.substr(pos1 + 1, pos2 - pos1 - 1);
+            const std::tstring arg2 = line.substr(pos2 + 1);
+            symbols[std::stoi(arg1, nullptr, 16)] = arg2;
         }
     }
 }
@@ -198,9 +214,19 @@ int APIENTRY tWinMain(_In_ const HINSTANCE hInstance, _In_opt_ const HINSTANCE h
         }
         else if (ext && _tcsicmp(ext, TEXT(".bin")) == 0)    // from sdcc
         {
-            LoadBIN(arg, m->memory);
             start = 0;
+            LoadBIN(arg, m->memory, start);
             loaded = true;
+        }
+        else if (ext && _tcsicmp(ext, TEXT(".com")) == 0)    // from millfork
+        {
+            start = 0x100;
+            LoadBIN(arg, m->memory, start);
+            loaded = true;
+        }
+        else if (ext && _tcsicmp(ext, TEXT(".lbl")) == 0)    // from millfork
+        {
+            LoadLBL(arg, m->symbols);
         }
         else if (ext && _tcsicmp(ext, TEXT(".ihx")) == 0)    // from sdcc
         {
@@ -217,7 +243,7 @@ int APIENTRY tWinMain(_In_ const HINSTANCE hInstance, _In_opt_ const HINSTANCE h
     }
     //m->breakpoint.insert(start + 0x02);
     //m->breakpoint.insert(start + 0x04);
-    m->symbols[start] = TEXT("start");
+    m->symbols.insert({ start, TEXT("start") });
 
     z80_power(&m->cpu, TRUE);
 
