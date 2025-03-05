@@ -203,29 +203,6 @@ LRESULT CALLBACK DisassemblyWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
         case LISTVIEW_ID:
             switch (pNmHdr->code)
             {
-            case LVN_KEYDOWN:
-            {
-                _ASSERT(m != nullptr);
-                LPNMLVKEYDOWN lpnkd = (LPNMLVKEYDOWN)pNmHdr;
-                if (lpnkd->wVKey == VK_F9)
-                {
-                    const int i = ListView_GetNextItem(pNmHdr->hwndFrom, -1, LVNI_FOCUSED);
-                    const zuint16 address = zuint16(ListView_GetItemParam(pNmHdr->hwndFrom, i));
-                    m->ToggleBreakPoint(address);
-                }
-                else if (lpnkd->wVKey == VK_F10 && (GetKeyState(VK_CONTROL) & 0x8000))
-                {
-                    const int i = ListView_GetNextItem(pNmHdr->hwndFrom, -1, LVNI_FOCUSED);
-                    const zuint16 address = zuint16(ListView_GetItemParam(pNmHdr->hwndFrom, i));
-                    const Reg16 reg = Reg16::PC;
-                    zuint16* val = GetRegU16(reg, m);
-                    m->SendRegChanged(reg); // Before
-                    *val = address;
-                    m->SendRegChanged(reg); // After
-                }
-                break;
-            }
-
             case NM_CUSTOMDRAW:
             {
                 LPNMLVCUSTOMDRAW lplvcd = (LPNMLVCUSTOMDRAW)pNmHdr;
@@ -330,6 +307,7 @@ LRESULT CALLBACK DisassemblyWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
 
     case WM_INITMENUPOPUP:
     {
+        _ASSERT(m != nullptr);
         const HMENU hMenu = reinterpret_cast<HMENU>(wParam);
         const int nItem = LOWORD(lParam);
         const BOOL bWindow = HIWORD(lParam);
