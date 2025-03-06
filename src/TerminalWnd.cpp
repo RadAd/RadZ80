@@ -17,6 +17,10 @@ namespace{
     const zuint16 CursorYLoc = 0xF102;
     const int ScreenWidth = 80;
     const int ScreenHeight = 25;
+    const zuint16 KeyboardBuf = 0xF200;
+    const zuint8 KeyboardBufLenMask = 0x0F;
+    const zuint16 KeyboardReadLoc = 0xF220;
+    const zuint16 KeyboardWriteLoc = 0xF221;
 }
 
 LRESULT CALLBACK TerminalWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -120,13 +124,13 @@ LRESULT CALLBACK TerminalWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
     case WM_CHAR:
     {
         const zuint8 charv = zuint8(wParam);
-        const zuint8 readoffset = m->memory[0xFF20] & 0x0F;
-        const zuint8 writeoffset = m->memory[0xFF21] & 0x0F;
-        const zuint8 nextwriteoffset = (writeoffset + 1) & 0x0F;
+        const zuint8 readoffset = m->memory[KeyboardReadLoc] & KeyboardBufLenMask;
+        const zuint8 writeoffset = m->memory[KeyboardWriteLoc] & KeyboardBufLenMask;
+        const zuint8 nextwriteoffset = (writeoffset + 1) & KeyboardBufLenMask;
         if (readoffset != nextwriteoffset)
         {
-            m->MemWrite(0xFF00 + writeoffset, charv, false);
-            m->MemWrite(0xFF21, nextwriteoffset, false);
+            m->MemWrite(KeyboardBuf + writeoffset, charv, false);
+            m->MemWrite(KeyboardWriteLoc, nextwriteoffset, false);
         }
         else
             MessageBeep(MB_ICONERROR);

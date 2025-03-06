@@ -50,9 +50,9 @@ SCREEN_CURSOR_X	equ		SCREEN_REG + OFFSET_CURSOR_X
 SCREEN_CURSOR_Y	equ		SCREEN_REG + OFFSET_CURSOR_Y
 
 
-KEYB_READ		equ		$FF20
-KEYB_WRITE		equ		$FF21
-KEYB_BUFFER		equ		$FF00
+KEYB_READ		equ		$F220
+KEYB_WRITE		equ		$F221
+KEYB_BUFFER		equ		$F200
 
 ; ---------------------------------
 ; Return
