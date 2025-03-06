@@ -108,6 +108,8 @@ inline HMENU LoadPopupMenu(_In_opt_ HINSTANCE hInstance, _In_ LPCTSTR lpMenuName
     return hPopupMenu;
 }
 
+void AddAccel(HMENU hMenu, HACCEL hAccel);
+
 #ifdef __cplusplus
 }
 #endif

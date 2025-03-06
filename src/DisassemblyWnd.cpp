@@ -305,6 +305,9 @@ LRESULT CALLBACK DisassemblyWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
         const BOOL bWindow = HIWORD(lParam);
         if (!bWindow)
         {
+            auto itAccel = g_hAccel.find(hWnd);
+            if (itAccel != g_hAccel.end())
+                AddAccel(hMenu, itAccel->second);
             const HWND hWndListView = GetDlgItem(hWnd, LISTVIEW_ID);
             const int i = ListView_GetNextItem(hWndListView, -1, LVNI_FOCUSED);
             const zuint16 address = zuint16(ListView_GetItemParam(hWndListView, i));

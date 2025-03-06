@@ -1,5 +1,6 @@
 #include "WindowsPlus.h"
 
+#include <crtdbg.h>
 #include <tchar.h>
 #include "resource.h"
 
@@ -98,4 +99,91 @@ BOOL InputBox(HWND hWnd, LPCTSTR strPrompt, LPCTSTR strTitle, LPTSTR strText, IN
     ibp.strText = strText;
     ibp.cchMaxText = cchMaxText;
     return DialogBoxParam(hInstance, MAKEINTRESOURCE(IDD_INPUTBOX), hWnd, InputBoxDlg, (LPARAM) &ibp) == IDOK;
+}
+
+struct MENUITEMINFOSTR
+{
+    MENUITEMINFO mii;
+    TCHAR str[100];
+};
+
+static struct MENUITEMINFOSTR GetMenuItemInfoStr(HMENU hMenu, int i, const UINT fMask)
+{
+    struct MENUITEMINFOSTR miis;
+    ZeroMemory(&miis, sizeof(miis));
+    miis.mii.cbSize = sizeof(MENUITEMINFO);
+    miis.mii.fMask = fMask;
+    if (GetMenuItemInfo(hMenu, i, TRUE, &miis.mii))
+    {
+        if ((fMask & MIIM_STRING) && miis.mii.cch > 0)
+        {
+            _ASSERTE(miis.mii.cch < ARRAYSIZE(miis.str));
+            ++miis.mii.cch;
+            miis.mii.dwTypeData = miis.str;
+            GetMenuItemInfo(hMenu, i, TRUE, &miis.mii);
+        }
+    }
+    return miis;
+}
+
+static ACCEL* UnpackAccel(HACCEL hAccel)
+{
+    int count = CopyAcceleratorTable(hAccel, NULL, 0);
+    ACCEL* pAccel = malloc((count + 1) * sizeof(ACCEL));
+    CopyAcceleratorTable(hAccel, pAccel, count);
+    ZeroMemory(&pAccel[count], sizeof(ACCEL));
+    return pAccel;
+}
+
+static void AccelToString(const ACCEL* pAccel, LPTSTR pStr, size_t len)
+{
+    pStr[0] = TEXT('\0');
+    if (pAccel->fVirt & FALT)
+        _tcscat_s(pStr, len, TEXT("Alt+"));
+    if (pAccel->fVirt & FCONTROL)
+        _tcscat_s(pStr, len, TEXT("Ctrl+"));
+    if (pAccel->fVirt & FSHIFT)
+        _tcscat_s(pStr, len, TEXT("Shift+"));
+    _ASSERTE(pAccel->fVirt & FVIRTKEY);
+    {
+        const BOOL extended = FALSE;
+        const UINT scanCode = MapVirtualKey(pAccel->key, MAPVK_VK_TO_VSC) | (extended ? KF_EXTENDED : 0);
+        TCHAR name[100];
+        const int result = GetKeyNameText(scanCode << 16, name, ARRAYSIZE(name));
+        _tcscat_s(pStr, len, name);
+    }
+}
+
+static const ACCEL* FindAccel(const ACCEL* pAccel, WORD ID)
+{
+    for (const ACCEL* pSearchAccel = pAccel; pSearchAccel->cmd != 0; ++pSearchAccel)
+    {
+        if (pSearchAccel->cmd == ID)
+            return pSearchAccel;
+    }
+    return NULL;
+}
+
+void AddAccel(HMENU hMenu, HACCEL hAccel)
+{
+    ACCEL* pAccel = UnpackAccel(hAccel);
+    for (int i = 0; i < GetMenuItemCount(hMenu); ++i)
+    {
+        struct MENUITEMINFOSTR miis = GetMenuItemInfoStr(hMenu, i, MIIM_ID | MIIM_STRING);
+        if (miis.str[0] != TEXT('\0') && _tcschr(miis.str, TEXT('\t')) == NULL)
+        {
+            const UINT ID = miis.mii.wID;
+            const ACCEL* pFoundAccel = FindAccel(pAccel, ID);
+            if (pFoundAccel != NULL)
+            {
+                _tcscat_s(miis.str, ARRAYSIZE(miis.str), TEXT("\t"));
+                size_t len = _tcslen(miis.str);
+                AccelToString(pFoundAccel, miis.str + len, ARRAYSIZE(miis.str) - len);
+                miis.mii.cch = 0;// _tcslen(miis.str);
+                miis.mii.dwTypeData = miis.str;
+                SetMenuItemInfo(hMenu, i, TRUE, &miis.mii);
+            }
+        }
+    }
+    free(pAccel);
 }
