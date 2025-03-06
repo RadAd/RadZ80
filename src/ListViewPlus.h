@@ -97,6 +97,9 @@ BOOL ListView_EnsureSubItemVisible(HWND hWnd, _In_ int nItem, _In_ int nCol, _In
 
 LRESULT CALLBACK ListView_EditSubItemProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 
+typedef void ListViewCustomDraw(LPNMLVCUSTOMDRAW lplvcd, const HWND hWnd, const int iItem, const int iSubItem, void* pVoid);
+LRESULT DoListViewCustomDraw(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, ListViewCustomDraw* pCustomDraw, void* pVoid);
+
 #ifdef __cplusplus
 }
 

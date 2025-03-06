@@ -69,6 +69,22 @@ namespace {
         FINDREPLACE fr;
         TCHAR FindBuffer[100];
     };
+
+    void DisassemblyWndCustomDraw(LPNMLVCUSTOMDRAW lplvcd, const HWND hWnd, const int iItem, const int iSubItem, void* pVoid)
+    {
+        const Machine* m = reinterpret_cast<Machine*>(pVoid);
+        const zuint16 address = (zuint16)ListView_GetItemParam(hWnd, iItem);
+        lplvcd->clrTextBk = GetItemBkColor(m, address);
+        if (iSubItem == 2)
+        {
+            TCHAR text[100];
+            ListView_GetItemText(hWnd, iItem, iSubItem, text, ARRAYSIZE(text));
+            lplvcd->clrText = (_tcsnccmp(text, TEXT("._"), 2) == 0 || _tcsnccmp(text, TEXT("_"), 1) == 0)
+                ? GetSysColor(COLOR_GRAYTEXT) : GetSysColor(COLOR_WINDOWTEXT);
+        }
+        else
+            lplvcd->clrText = GetSysColor(COLOR_WINDOWTEXT);
+    }
 }
 
 LRESULT CALLBACK DisassemblyWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -205,31 +221,7 @@ LRESULT CALLBACK DisassemblyWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
             {
             case NM_CUSTOMDRAW:
             {
-                LPNMLVCUSTOMDRAW lplvcd = (LPNMLVCUSTOMDRAW)pNmHdr;
-                const zuint16 address = (zuint16)ListView_GetItemParam(pNmHdr->hwndFrom, (int)lplvcd->nmcd.dwItemSpec);
-                switch (lplvcd->nmcd.dwDrawStage)
-                {
-                case CDDS_PREPAINT:
-                    return CDRF_NOTIFYITEMDRAW;
-
-                case CDDS_ITEMPREPAINT:
-                    lplvcd->clrTextBk = GetItemBkColor(m, address);
-                    return CDRF_NOTIFYSUBITEMDRAW;
-
-                case CDDS_SUBITEM | CDDS_ITEMPREPAINT:
-                    lplvcd->clrTextBk = GetItemBkColor(m, address);
-                    if (lplvcd->iSubItem == 2)
-                    {
-                        TCHAR text[100];
-                        ListView_GetItemText(pNmHdr->hwndFrom, (int)lplvcd->nmcd.dwItemSpec, lplvcd->iSubItem, text, ARRAYSIZE(text));
-                        lplvcd->clrText = (_tcsnccmp(text, TEXT("._"), 2) == 0 || _tcsnccmp(text, TEXT("_"), 1) == 0)
-                            ? GetSysColor(COLOR_GRAYTEXT) : GetSysColor(COLOR_WINDOWTEXT);
-                    }
-                    else
-                        lplvcd->clrText = GetSysColor(COLOR_WINDOWTEXT);
-                    return CDRF_DODEFAULT;
-                }
-                return DefWindowProc(hWnd, message, wParam, lParam);
+                return DoListViewCustomDraw(hWnd, message, wParam, lParam, DisassemblyWndCustomDraw, m);
             }
             break;
             }

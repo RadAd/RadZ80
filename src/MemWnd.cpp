@@ -15,19 +15,20 @@
 TCHAR* pMemWndClass = TEXT("RadMemWnd");
 
 #define LISTVIEW_ID (100)
+#define BYTE_COLUMNS (16)
 
 namespace {
     inline zuint16 GetAddress(const LVITEM* pItem)
     {
-        return pItem->iItem * 16 + pItem->iSubItem - 1;
+        return pItem->iItem * BYTE_COLUMNS + pItem->iSubItem - 1;
     }
 
     void InvalidateAddress(HWND hWndListView, zuint16 address)
     {
         RECT rc = {};
-        ListView_GetSubItemRect(hWndListView, address / 16, address % 16 + 1, LVIR_BOUNDS, &rc);
+        ListView_GetSubItemRect(hWndListView, address / BYTE_COLUMNS, address % BYTE_COLUMNS + 1, LVIR_BOUNDS, &rc);
         InvalidateRect(hWndListView, &rc, TRUE);
-        ListView_GetSubItemRect(hWndListView, address / 16, 17, LVIR_BOUNDS, &rc);
+        ListView_GetSubItemRect(hWndListView, address / BYTE_COLUMNS, BYTE_COLUMNS + 1, LVIR_BOUNDS, &rc);
         InvalidateRect(hWndListView, &rc, TRUE);
     }
 
@@ -36,6 +37,50 @@ namespace {
         Machine* m;
         std::set<zuint16> changed;
     };
+
+    void MemWndCustomDraw(LPNMLVCUSTOMDRAW lplvcd, const HWND hWnd, const int iItem, const int iSubItem, void* pVoid)
+    {
+        const MemWndData* data = reinterpret_cast<MemWndData*>(pVoid);
+        switch (iSubItem)
+        {
+        case 0:
+            lplvcd->clrText = GetSysColor(COLOR_BTNTEXT);
+            lplvcd->clrTextBk = GetSysColor(COLOR_BTNFACE);
+            break;
+
+        case BYTE_COLUMNS + 1:
+            lplvcd->clrText = RGB(0, 0, 128);
+            lplvcd->clrTextBk = GetSysColor(COLOR_WINDOW);
+            break;
+
+        default:
+        {
+            zuint16 address = zuint16(lplvcd->nmcd.dwItemSpec * BYTE_COLUMNS + lplvcd->iSubItem - 1);
+            const zuint8 v = data->m->memory[address];
+            lplvcd->clrText = v == 0 ? GetSysColor(COLOR_GRAYTEXT) : GetSysColor(COLOR_WINDOWTEXT);
+            if (data->m->GetState() != State::RUN)
+            {
+                if (address == Z80_PC(data->m->cpu))
+                    lplvcd->clrTextBk = COLOR_PC;
+                else if (address == Z80_SP(data->m->cpu))
+                    lplvcd->clrTextBk = COLOR_SP;
+                else if (address == Z80_HL(data->m->cpu))
+                    lplvcd->clrTextBk = COLOR_HL;
+                else if (address == Z80_IX(data->m->cpu))
+                    lplvcd->clrTextBk = COLOR_IX;
+                else if (address == Z80_IY(data->m->cpu))
+                    lplvcd->clrTextBk = COLOR_IY;
+                else if (data->changed.find(address) != data->changed.end())
+                    lplvcd->clrTextBk = RGB(255, 0, 0);
+                else
+                    lplvcd->clrTextBk = GetSysColor(COLOR_WINDOW);
+            }
+            else
+                lplvcd->clrTextBk = GetSysColor(COLOR_WINDOW);
+            break;
+        }
+        }
+    }
 }
 
 LRESULT CALLBACK MemWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -70,7 +115,7 @@ LRESULT CALLBACK MemWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 
         ListView_AddColumn(hWndListView, TEXT("Addr"), LVCFMT_CENTER, 0);
 
-        for (int i = 0; i < 16; ++i)
+        for (int i = 0; i < BYTE_COLUMNS; ++i)
         {
             TCHAR heading[100];
             StringCchPrintf(heading, ARRAYSIZE(heading), TEXT("%02X"), i);
@@ -79,7 +124,7 @@ LRESULT CALLBACK MemWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 
         ListView_AddColumn(hWndListView, TEXT("ASCII"), LVCFMT_CENTER, 0);
 
-        ListView_SetItemCount(hWndListView, 65536 / 16);
+        ListView_SetItemCount(hWndListView, 65536 / BYTE_COLUMNS);
 
         int width = GetSystemMetrics(SM_CXVSCROLL); // +4;
         const int ColCount = Header_GetItemCount(ListView_GetHeader(hWndListView));
@@ -123,16 +168,16 @@ LRESULT CALLBACK MemWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
                 if (plvdi->item.mask & LVIF_TEXT)
                 {
                     if (plvdi->item.iSubItem == 0)
-                        StringCchPrintf(plvdi->item.pszText, plvdi->item.cchTextMax, TEXT("%04X"), plvdi->item.iItem * 16);
-                    else if (plvdi->item.iSubItem == 17)
+                        StringCchPrintf(plvdi->item.pszText, plvdi->item.cchTextMax, TEXT("%04X"), plvdi->item.iItem * BYTE_COLUMNS);
+                    else if (plvdi->item.iSubItem == (BYTE_COLUMNS + 1))
                     {
-                        zuint16 index = plvdi->item.iItem * 16;
-                        for (int i = 0; i < 16; ++i)
+                        zuint16 index = plvdi->item.iItem * BYTE_COLUMNS;
+                        for (int i = 0; i < BYTE_COLUMNS; ++i)
                         {
                             zuint8 v = data->m->memory[index + i];
                             plvdi->item.pszText[i] = std::isprint(v) ? v : TEXT('.');
                         }
-                        plvdi->item.pszText[16] = TEXT('\0');
+                        plvdi->item.pszText[BYTE_COLUMNS] = TEXT('\0');
                     }
                     else
                         StringCchPrintf(plvdi->item.pszText, plvdi->item.cchTextMax, TEXT("%02X"), data->m->memory[GetAddress(&plvdi->item)]);
@@ -148,21 +193,21 @@ LRESULT CALLBACK MemWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
                 Edit_LimitText(hEdit, 2);
                 SetWindowSubclass(hEdit, EditHexChar, 0, 0);
 
-                return !(plvdi->item.iSubItem >= 1 && plvdi->item.iSubItem < 17);
+                return !(plvdi->item.iSubItem >= 1 && plvdi->item.iSubItem < (BYTE_COLUMNS + 1));
             }
 
             case LVN_ENDLABELEDIT:
             {
                 const NMLVDISPINFO* plvdi = (NMLVDISPINFO*)pNmHdr;
                 if (plvdi->item.pszText != NULL)
-                    data->m->MemWrite(GetAddress(&plvdi->item), (zuint8)wcstoul(plvdi->item.pszText, nullptr, 16), false);
+                    data->m->MemWrite(GetAddress(&plvdi->item), (zuint8)_tcstol(plvdi->item.pszText, nullptr, 16), false);
                 return FALSE;
             }
 
             case LVN_ODFINDITEM:
             {
                 const LPNMLVFINDITEM pFindInfo = (LPNMLVFINDITEM)pNmHdr;
-                //zuint16 address = zuint16(pFindInfo->iStart * 16);
+                //zuint16 address = zuint16(pFindInfo->iStart * BYTE_COLUMNS);
                 if (pFindInfo->lvfi.flags & LVFI_STRING)
                 {
                     size_t len = 0;
@@ -170,7 +215,7 @@ LRESULT CALLBACK MemWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
                     zuint16 address = zuint16(_tcstol(pFindInfo->lvfi.psz, nullptr, 16));
                     //if (len < 4)
                         address *= zuint16(std::pow(0x10, 4 - len));
-                    return address / 16;
+                    return address / BYTE_COLUMNS;
                 }
                 else
                     return -1;
@@ -178,53 +223,7 @@ LRESULT CALLBACK MemWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 
             case NM_CUSTOMDRAW:
             {
-                LPNMLVCUSTOMDRAW lplvcd = (LPNMLVCUSTOMDRAW)pNmHdr;
-                switch (lplvcd->nmcd.dwDrawStage)
-                {
-                case CDDS_PREPAINT:
-                    return CDRF_NOTIFYITEMDRAW;
-
-                case CDDS_ITEMPREPAINT:
-                    lplvcd->clrText = GetSysColor(COLOR_BTNTEXT);
-                    lplvcd->clrTextBk = GetSysColor(COLOR_BTNFACE);
-                    //return CDRF_NEWFONT;
-                    return CDRF_NOTIFYSUBITEMDRAW;
-
-                case CDDS_SUBITEM | CDDS_ITEMPREPAINT:
-                    if (lplvcd->iSubItem == 17)
-                    {
-                        lplvcd->clrText = RGB(0, 0, 128);
-                        lplvcd->clrTextBk = GetSysColor(COLOR_WINDOW);
-                    }
-                    else if (lplvcd->iSubItem != 0)
-                    {
-                        zuint16 address = zuint16(lplvcd->nmcd.dwItemSpec * 16 + lplvcd->iSubItem - 1);
-                        const zuint8 v = data->m->memory[address];
-                        lplvcd->clrText = v == 0 ? GetSysColor(COLOR_GRAYTEXT) : GetSysColor(COLOR_WINDOWTEXT);
-                        if (data->m->GetState() != State::RUN)
-                        {
-                            if (address == Z80_PC(data->m->cpu))
-                                lplvcd->clrTextBk = COLOR_PC;
-                            else if (address == Z80_SP(data->m->cpu))
-                                lplvcd->clrTextBk = COLOR_SP;
-                            else if (address == Z80_HL(data->m->cpu))
-                                lplvcd->clrTextBk = COLOR_HL;
-                            else if (address == Z80_IX(data->m->cpu))
-                                lplvcd->clrTextBk = COLOR_IX;
-                            else if (address == Z80_IY(data->m->cpu))
-                                lplvcd->clrTextBk = COLOR_IY;
-                            else if (data->changed.find(address) != data->changed.end())
-                                lplvcd->clrTextBk = RGB(255, 0, 0);
-                            else
-                                lplvcd->clrTextBk = GetSysColor(COLOR_WINDOW);
-                        }
-                        else
-                            lplvcd->clrTextBk = GetSysColor(COLOR_WINDOW);
-                    }
-                    //return CDRF_NEWFONT;
-                    return CDRF_DODEFAULT;
-                }
-                return DefWindowProc(hWnd, message, wParam, lParam);
+                return DoListViewCustomDraw(hWnd, message, wParam, lParam, MemWndCustomDraw, data);
             }
             break;
             }

@@ -1,4 +1,5 @@
 #include "ListViewPlus.h"
+#include <crtdbg.h>
 
 #include "WindowsPlus.h"
 
@@ -217,4 +218,26 @@ LRESULT CALLBACK ListView_EditSubItemProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
     default:
         return DefSubclassProc(hWnd, uMsg, wParam, lParam);
     }
+}
+
+LRESULT DoListViewCustomDraw(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, ListViewCustomDraw* pCustomDraw, void* pVoid)
+{
+    _ASSERTE(message == WM_NOTIFY);
+    LPNMHDR pNmHdr = (LPNMHDR)lParam;
+    _ASSERTE(pNmHdr->code == NM_CUSTOMDRAW);
+    LPNMLVCUSTOMDRAW lplvcd = (LPNMLVCUSTOMDRAW)pNmHdr;
+    switch (lplvcd->nmcd.dwDrawStage)
+    {
+    case CDDS_PREPAINT:
+        return CDRF_NOTIFYITEMDRAW;
+
+    case CDDS_ITEMPREPAINT:
+        pCustomDraw(lplvcd, pNmHdr->hwndFrom, (int)lplvcd->nmcd.dwItemSpec, 0, pVoid);
+        return CDRF_NOTIFYSUBITEMDRAW;
+
+    case CDDS_SUBITEM | CDDS_ITEMPREPAINT:
+        pCustomDraw(lplvcd, pNmHdr->hwndFrom, (int)lplvcd->nmcd.dwItemSpec, lplvcd->iSubItem, pVoid);
+        return CDRF_DODEFAULT;
+    }
+    return DefWindowProc(hWnd, message, wParam, lParam);
 }
