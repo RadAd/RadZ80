@@ -113,6 +113,10 @@ public:
     void Unregister(HWND hWnd) { hWnds.erase(hWnd); }
 
     void MemWrite(zuint16 address, zuint8 value, bool fromemulation);
+    zuint16 MemReadU16(zuint16 address) const
+    {
+        return zuint16(memory[address + 1]) * 256 + memory[address];
+    }
 
     void SendRegChanged(Reg8 reg) const { SendAllMessage(WM_REG_CHANGED, 0, (LPARAM) reg); }
     void SendRegChanged(Reg16 reg) const { SendAllMessage(WM_REG_CHANGED, 0, (LPARAM) reg); }

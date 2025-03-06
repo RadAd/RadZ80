@@ -44,10 +44,11 @@ namespace {
             if (iItem >= 0)
             {
                 RECT rc = {};
-                ListView_GetSubItemRect(hWndListView, iItem, 2, LVIR_BOUNDS, &rc);
-                InvalidateRect(hWndListView, &rc, TRUE);
-                ListView_GetSubItemRect(hWndListView, iItem, 3, LVIR_BOUNDS, &rc);
-                InvalidateRect(hWndListView, &rc, TRUE);
+                for (int i = 2; i <= 5; ++i)
+                {
+                    ListView_GetSubItemRect(hWndListView, iItem, i, LVIR_BOUNDS, &rc);
+                    InvalidateRect(hWndListView, &rc, TRUE);
+                }
             }
         }
     }
@@ -83,8 +84,10 @@ LRESULT CALLBACK SymbolsWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 
         ListView_AddColumn(hWndListView, TEXT("Address"), LVCFMT_CENTER, 40);
         ListView_AddColumn(hWndListView, TEXT("Symbol"), LVCFMT_LEFT, 80);
-        ListView_AddColumn(hWndListView, TEXT("Byte"), LVCFMT_LEFT, 40);
-        ListView_AddColumn(hWndListView, TEXT("Word"), LVCFMT_LEFT, 60);
+        ListView_AddColumn(hWndListView, TEXT("Byte (hex)"), LVCFMT_RIGHT, 40);
+        ListView_AddColumn(hWndListView, TEXT("Byte (dec)"), LVCFMT_RIGHT, 40);
+        ListView_AddColumn(hWndListView, TEXT("Word (hex)"), LVCFMT_RIGHT, 60);
+        ListView_AddColumn(hWndListView, TEXT("Word (dec)"), LVCFMT_RIGHT, 60);
 
         int nItem = 0;
         for (const auto& symbol : m->symbols)
@@ -141,7 +144,15 @@ LRESULT CALLBACK SymbolsWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
                         break;
 
                     case 3:
-                        StringCchPrintf(plvdi->item.pszText, plvdi->item.cchTextMax, TEXT("%02X%02X"), m->memory[address], m->memory[address + 1]);
+                        StringCchPrintf(plvdi->item.pszText, plvdi->item.cchTextMax, TEXT("%u"), m->memory[address]);
+                        break;
+
+                    case 4:
+                        StringCchPrintf(plvdi->item.pszText, plvdi->item.cchTextMax, TEXT("%04X"), m->MemReadU16(address));
+                        break;
+
+                    case 5:
+                        StringCchPrintf(plvdi->item.pszText, plvdi->item.cchTextMax, TEXT("%u"), m->MemReadU16(address));
                         break;
                     }
                 }
