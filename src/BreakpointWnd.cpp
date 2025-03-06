@@ -4,10 +4,13 @@
 #include <strsafe.h>
 #include <tchar.h>
 
+#include "resource.h"
+
 #include "Machine.h"
 //#include "EditPlus.h"
 #include "ListViewPlus.h"
 #include "ListViewVector.h"
+#include "WindowMgr.h"
 #include "WindowsPlus.h"
 
 TCHAR* pBreakpointWndClass = TEXT("RadBreakpointWnd");
@@ -144,6 +147,19 @@ LRESULT CALLBACK BreakpointWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARA
                     break;
                 }
                 }
+            }
+
+            case LVN_ITEMACTIVATE:
+            {
+                const int i = ListView_GetNextItem(pNmHdr->hwndFrom, -1, LVNI_FOCUSED);
+                if (i >= 0) // && MessageBox(hWnd, TEXT("Delete breakpoint?"), TEXT("Delete Breakpoint?"), MB_YESNO) == IDYES)
+                {
+                    const zuint16 address = (zuint16)ListView_GetItemParam(pNmHdr->hwndFrom, i);
+                    const HWND hWndTop = GetAncestor(hWnd, GA_ROOTOWNER);
+                    const HWND hWndDisassembly = ShowWindow(hWndTop, ID_VIEW_DISASSEMBLY, m);
+                    SendMessage(hWndDisassembly, WM_GOTO_ADDRESS, 0, address);
+                }
+                break;
             }
             }
         }

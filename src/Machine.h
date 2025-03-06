@@ -27,6 +27,8 @@
 #define WM_BREAKPOINT_CHANGED (WM_USER + 112)
 #define WM_REG_CHANGED (WM_USER + 113)
 
+#define WM_GOTO_ADDRESS (WM_USER + 114)
+
 #define COLOR_BP RGB(0xFF, 0x00, 0x00)
 #define COLOR_PC RGB(0x87, 0xCE, 0xEB)
 #define COLOR_SP RGB(0x3C, 0xB0, 0x43)

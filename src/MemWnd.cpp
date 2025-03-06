@@ -23,12 +23,22 @@ namespace {
         return pItem->iItem * BYTE_COLUMNS + pItem->iSubItem - 1;
     }
 
+    inline int GetLine(zuint16 address)
+    {
+        return address / BYTE_COLUMNS;
+    }
+
+    inline int GetSubItem(zuint16 address)
+    {
+        return address % BYTE_COLUMNS + 1;
+    }
+
     void InvalidateAddress(HWND hWndListView, zuint16 address)
     {
         RECT rc = {};
-        ListView_GetSubItemRect(hWndListView, address / BYTE_COLUMNS, address % BYTE_COLUMNS + 1, LVIR_BOUNDS, &rc);
+        ListView_GetSubItemRect(hWndListView, GetLine(address), GetSubItem(address), LVIR_BOUNDS, &rc);
         InvalidateRect(hWndListView, &rc, TRUE);
-        ListView_GetSubItemRect(hWndListView, address / BYTE_COLUMNS, BYTE_COLUMNS + 1, LVIR_BOUNDS, &rc);
+        ListView_GetSubItemRect(hWndListView, GetLine(address), BYTE_COLUMNS + 1, LVIR_BOUNDS, &rc);
         InvalidateRect(hWndListView, &rc, TRUE);
     }
 
@@ -215,7 +225,7 @@ LRESULT CALLBACK MemWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
                     zuint16 address = zuint16(_tcstol(pFindInfo->lvfi.psz, nullptr, 16));
                     //if (len < 4)
                         address *= zuint16(std::pow(0x10, 4 - len));
-                    return address / BYTE_COLUMNS;
+                    return GetLine(address);
                 }
                 else
                     return -1;
@@ -274,6 +284,20 @@ LRESULT CALLBACK MemWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
             }
         }
         return 0;
+    }
+
+    case WM_GOTO_ADDRESS:
+    {
+        const zuint16 addr = zuint16(lParam);
+        const HWND hWndListView = GetDlgItem(hWnd, LISTVIEW_ID);
+        const int nItem = GetLine(addr);
+        if (nItem >= 0)
+        {
+            ListView_SetItemState(hWndListView, -1, 0, LVIS_SELECTED);
+            ListView_SetItemState(hWndListView, nItem, LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
+            ListView_EnsureVisible(hWndListView, nItem, FALSE);
+        }
+        return DefWindowProc(hWnd, message, wParam, lParam);
     }
 
     case WM_UPDATE_STATE:

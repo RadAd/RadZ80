@@ -46,7 +46,7 @@ namespace
         LPCTSTR     lpszTitle;
         SIZE        sz;
     } gWndDefine[] = {
-        { ID_VIEW_MEMORY,       MemWndProc,         pMemWndClass,           TEXT("Z80 Memory"),         SIZE({ CW_USEDEFAULT, CW_USEDEFAULT })},
+        { ID_VIEW_MEMORY,       MemWndProc,         pMemWndClass,           TEXT("Z80 Memory"),         SIZE({ 100, 800 })},
         { ID_VIEW_BREAKPOINTS,  BreakpointWndProc,  pBreakpointWndClass,    TEXT("Z80 Breakpoints"),    SIZE({ 100, 300 })},
         { ID_VIEW_DISASSEMBLY,  DisassemblyWndProc, pDisassemblyWndClass,   TEXT("Z80 Disassembly"),    SIZE({ 100, 300 })},
         { ID_VIEW_SYMBOLS,      SymbolsWndProc,     pSymbolsWndClass,       TEXT("Z80 Symbols"),        SIZE({ 100, 300 })},
@@ -83,7 +83,7 @@ void RegisterWindows(HINSTANCE hInstance)
     wc.lpszMenuName = nullptr;
 }
 
-void ShowWindow(HWND hWndTop, LPCTSTR lpClassName, LPCTSTR lpTitle, SIZE sz, bool resizeable, Machine* m)
+HWND ShowWindow(HWND hWndTop, LPCTSTR lpClassName, LPCTSTR lpTitle, SIZE sz, bool resizeable, Machine* m)
 {
     HWND hWnd = FindOwnedWindow(hWndTop, lpClassName, NULL);
     if (hWnd)
@@ -96,12 +96,13 @@ void ShowWindow(HWND hWndTop, LPCTSTR lpClassName, LPCTSTR lpTitle, SIZE sz, boo
         HINSTANCE hInstance = NULL;
         RECT rc;
         GetWindowRect(hWndTop, &rc);
-        HWND hWndMem = CreateWindowEx(WS_EX_TOOLWINDOW, lpClassName, lpTitle, WS_OVERLAPPEDWINDOW & ~(resizeable ? 0 : WS_THICKFRAME), rc.right, rc.top, sz.cx, sz.cy, hWndTop, NULL, hInstance, m);
-        if (hWndMem == NULL)
+        hWnd = CreateWindowEx(WS_EX_TOOLWINDOW, lpClassName, lpTitle, (WS_OVERLAPPEDWINDOW & ~(resizeable ? 0 : WS_THICKFRAME)) | WS_POPUP, rc.right, rc.top, sz.cx, sz.cy, hWndTop, NULL, hInstance, m);
+        if (hWnd == NULL)
             MessageBox(hWndTop, TEXT("Error creating window"), TEXT("Rad Z80"), MB_OK | MB_ICONERROR);
         else
-            ShowWindow(hWndMem, SW_SHOW);
+            ShowWindow(hWnd, SW_SHOW);
     }
+    return hWnd;
 }
 
 void ShowDialog(HWND hWndTop, LPCTSTR lpTitle, int Resource, DLGPROC lpDialogFunc, Machine* m)
@@ -265,4 +266,13 @@ LRESULT CALLBACK MenuWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
     default:
         return FALSE;
     }
+}
+
+HWND ShowWindow(HWND hWnd, UINT nID, Machine* m)
+{
+    const WndDefine* wd = FindWndDefine(nID);
+    if (wd != nullptr)
+        return ShowWindow(hWnd, wd->lpszClassName, wd->lpszTitle, wd->sz, true, m);
+    else
+        return NULL;
 }

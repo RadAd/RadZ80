@@ -274,6 +274,20 @@ LRESULT CALLBACK DisassemblyWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
         return DefWindowProc(hWnd, message, wParam, lParam);
     }
 
+    case WM_GOTO_ADDRESS:
+    {
+        const zuint16 addr = zuint16(lParam);
+        const HWND hWndListView = GetDlgItem(hWnd, LISTVIEW_ID);
+        const int nItem = FindItem(hWndListView, addr);
+        if (nItem >= 0)
+        {
+            ListView_SetItemState(hWndListView, -1, 0, LVIS_SELECTED);
+            ListView_SetItemState(hWndListView, nItem, LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
+            ListView_EnsureVisible(hWndListView, nItem, FALSE);
+        }
+        return DefWindowProc(hWnd, message, wParam, lParam);
+    }
+
     case WM_SIZE:
     {
         const HWND hWndListView = GetDlgItem(hWnd, LISTVIEW_ID);
