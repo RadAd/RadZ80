@@ -18,6 +18,50 @@ extern std::map<HWND, HACCEL> g_hAccel;
 
 namespace
 {
+    const struct DlgDefine
+    {
+        UINT        nID;
+        DLGPROC     lpDialogFunc;
+        int         nResouce;
+        LPCTSTR     lpszTitle;
+    } gDlgDefine[] = {
+        { ID_VIEW_REGISTERS,    DlgRegistersProc,   IDD_REGISTERS,  TEXT("Z80 Registers")},
+    };
+
+    const DlgDefine* FindDlgDefine(UINT nID)
+    {
+        for (const DlgDefine& dd : gDlgDefine)
+        {
+            if (dd.nID == nID)
+                return &dd;
+        }
+        return nullptr;
+    }
+
+    const struct WndDefine
+    {
+        UINT        nID;
+        WNDPROC     lpfnWndProc;
+        LPCTSTR     lpszClassName;
+        LPCTSTR     lpszTitle;
+        SIZE        sz;
+    } gWndDefine[] = {
+        { ID_VIEW_MEMORY,       MemWndProc,         pMemWndClass,           TEXT("Z80 Memory"),         SIZE({ CW_USEDEFAULT, CW_USEDEFAULT })},
+        { ID_VIEW_BREAKPOINTS,  BreakpointWndProc,  pBreakpointWndClass,    TEXT("Z80 Breakpoints"),    SIZE({ 100, 300 })},
+        { ID_VIEW_DISASSEMBLY,  DisassemblyWndProc, pDisassemblyWndClass,   TEXT("Z80 Disassembly"),    SIZE({ 100, 300 })},
+        { ID_VIEW_SYMBOLS,      SymbolsWndProc,     pSymbolsWndClass,       TEXT("Z80 Symbols"),        SIZE({ 100, 300 })},
+    };
+
+    const WndDefine* FindWndDefine(UINT nID)
+    {
+        for (const WndDefine& wd : gWndDefine)
+        {
+            if (wd.nID == nID)
+                return &wd;
+        }
+        return nullptr;
+    }
+
     std::vector<ACCEL> UnpackAccel(HACCEL hAccel)
     {
         std::vector<ACCEL> accels(CopyAcceleratorTable(hAccel, nullptr, 0));
@@ -128,21 +172,12 @@ void RegisterWindows(HINSTANCE hInstance)
     WNDCLASS wc = {};
     wc.hInstance = hInstance;
 
-    wc.lpfnWndProc = MemWndProc;
-    wc.lpszClassName = pMemWndClass;
-    RegisterClass(&wc);
-
-    wc.lpfnWndProc = BreakpointWndProc;
-    wc.lpszClassName = pBreakpointWndClass;
-    RegisterClass(&wc);
-
-    wc.lpfnWndProc = DisassemblyWndProc;
-    wc.lpszClassName = pDisassemblyWndClass;
-    RegisterClass(&wc);
-
-    wc.lpfnWndProc = SymbolsWndProc;
-    wc.lpszClassName = pSymbolsWndClass;
-    RegisterClass(&wc);
+    for (const WndDefine& wd : gWndDefine)
+    {
+        wc.lpfnWndProc = wd.lpfnWndProc;
+        wc.lpszClassName = wd.lpszClassName;
+        RegisterClass(&wc);
+    }
 
     wc.lpfnWndProc = TerminalWndProc;
     wc.lpszClassName = pTerminalWndClass;
@@ -258,27 +293,23 @@ LRESULT CALLBACK MenuWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
             return TRUE;
         }
 
-        case ID_VIEW_REGISTERS:
-            ShowDialog(hWndTop, TEXT("Z80 Registers"), IDD_REGISTERS, DlgRegistersProc, m);
-            return TRUE;
-
-        case ID_VIEW_MEMORY:
-            ShowWindow(hWndTop, pMemWndClass, TEXT("Z80 Memory"), SIZE({ CW_USEDEFAULT, CW_USEDEFAULT }), true, m);
-            return TRUE;
-
-        case ID_VIEW_BREAKPOINTS:
-            ShowWindow(hWndTop, pBreakpointWndClass, TEXT("Z80 Breakpoints"), SIZE({ 100, 300 }), true, m);
-            return TRUE;
-
-        case ID_VIEW_DISASSEMBLY:
-            ShowWindow(hWndTop, pDisassemblyWndClass, TEXT("Z80 Disassembly"), SIZE({ 100, 300 }), true, m);
-            return TRUE;
-
-        case ID_VIEW_SYMBOLS:
-            ShowWindow(hWndTop, pSymbolsWndClass, TEXT("Z80 Symbols"), SIZE({ 100, 300 }), true, m);
-            return TRUE;
+        default:
+        {
+            const DlgDefine* dd = FindDlgDefine(nIDDlgItem);
+            if (dd != nullptr)
+            {
+                ShowDialog(hWndTop, dd->lpszTitle, dd->nResouce, dd->lpDialogFunc, m);
+                return TRUE;
+            }
+            const WndDefine* wd = FindWndDefine(nIDDlgItem);
+            if (wd != nullptr)
+            {
+                ShowWindow(hWndTop, wd->lpszClassName, wd->lpszTitle, wd->sz, true, m);
+                return TRUE;
+            }
+            return FALSE;
         }
-        return FALSE;
+        }
     }
 
     case WM_INITMENUPOPUP:
@@ -319,16 +350,13 @@ LRESULT CALLBACK MenuWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
                     EnableMenuItem(hMenu, ID_DEBUG_BREAK, MF_BYCOMMAND | MF_DISABLED);
                     break;
                 }
-
-                CheckMenuItem(hMenu, ID_DEBUG_RUN, MF_BYCOMMAND | (FindOwnedWindow(hWndTop, pMemWndClass, NULL) ? MF_CHECKED : MF_UNCHECKED));
                 break;
             case 2:
                 _ASSERTE(GetMenuItemID(hMenu, 0) == ID_VIEW_REGISTERS);
-                CheckMenuItem(hMenu, ID_VIEW_REGISTERS, MF_BYCOMMAND | (FindOwnedWindow(hWndTop, TEXT("#32770"), TEXT("Z80 Registers")) ? MF_CHECKED : MF_UNCHECKED));
-                CheckMenuItem(hMenu, ID_VIEW_MEMORY, MF_BYCOMMAND | (FindOwnedWindow(hWndTop, pMemWndClass, NULL) ? MF_CHECKED : MF_UNCHECKED));
-                CheckMenuItem(hMenu, ID_VIEW_BREAKPOINTS, MF_BYCOMMAND | (FindOwnedWindow(hWndTop, pBreakpointWndClass, NULL) ? MF_CHECKED : MF_UNCHECKED));
-                CheckMenuItem(hMenu, ID_VIEW_DISASSEMBLY, MF_BYCOMMAND | (FindOwnedWindow(hWndTop, pDisassemblyWndClass, NULL) ? MF_CHECKED : MF_UNCHECKED));
-                CheckMenuItem(hMenu, ID_VIEW_SYMBOLS, MF_BYCOMMAND | (FindOwnedWindow(hWndTop, pSymbolsWndClass, NULL) ? MF_CHECKED : MF_UNCHECKED));
+                for (const DlgDefine& dd : gDlgDefine)
+                    CheckMenuItem(hMenu, dd.nID, MF_BYCOMMAND | (FindOwnedWindow(hWndTop, TEXT("#32770"), dd.lpszTitle) ? MF_CHECKED : MF_UNCHECKED));
+                for (const WndDefine& wd : gWndDefine)
+                    CheckMenuItem(hMenu, wd.nID, MF_BYCOMMAND | (FindOwnedWindow(hWndTop, wd.lpszClassName, NULL) ? MF_CHECKED : MF_UNCHECKED));
                 CheckMenuItem(hMenu, ID_VIEW_OUTPUT, MF_BYCOMMAND | (GetConsoleWindow() ? MF_CHECKED : MF_UNCHECKED));
                 break;
             }
