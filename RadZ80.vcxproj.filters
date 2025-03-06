@@ -19,6 +19,7 @@
       <Filter>Z80DisAssembler</Filter>
     </ClCompile>
     <ClCompile Include="src\StrUtils.cpp" />
+    <ClCompile Include="src\SymbolsWnd.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\BreakpointWnd.h" />
@@ -38,6 +39,7 @@
       <Filter>Z80</Filter>
     </ClInclude>
     <ClInclude Include="src\StrUtils.h" />
+    <ClInclude Include="src\SymbolsWnd.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="src\RadZ80.rc" />

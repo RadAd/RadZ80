@@ -4,6 +4,7 @@
 #include "MemWnd.h"
 #include "BreakpointWnd.h"
 #include "DisassemblyWnd.h"
+#include "SymbolsWnd.h"
 #include "TerminalWnd.h"
 
 #include "Machine.h"
@@ -139,6 +140,10 @@ void RegisterWindows(HINSTANCE hInstance)
     wc.lpszClassName = pDisassemblyWndClass;
     RegisterClass(&wc);
 
+    wc.lpfnWndProc = SymbolsWndProc;
+    wc.lpszClassName = pSymbolsWndClass;
+    RegisterClass(&wc);
+
     wc.lpfnWndProc = TerminalWndProc;
     wc.lpszClassName = pTerminalWndClass;
     wc.lpszMenuName = MAKEINTRESOURCE(IDR_MAIN);
@@ -268,6 +273,10 @@ LRESULT CALLBACK MenuWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
         case ID_VIEW_DISASSEMBLY:
             ShowWindow(hWndTop, pDisassemblyWndClass, TEXT("Z80 Disassembly"), SIZE({ 100, 300 }), true, m);
             return TRUE;
+
+        case ID_VIEW_SYMBOLS:
+            ShowWindow(hWndTop, pSymbolsWndClass, TEXT("Z80 Symbols"), SIZE({ 100, 300 }), true, m);
+            return TRUE;
         }
         return FALSE;
     }
@@ -319,6 +328,7 @@ LRESULT CALLBACK MenuWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
                 CheckMenuItem(hMenu, ID_VIEW_MEMORY, MF_BYCOMMAND | (FindOwnedWindow(hWndTop, pMemWndClass, NULL) ? MF_CHECKED : MF_UNCHECKED));
                 CheckMenuItem(hMenu, ID_VIEW_BREAKPOINTS, MF_BYCOMMAND | (FindOwnedWindow(hWndTop, pBreakpointWndClass, NULL) ? MF_CHECKED : MF_UNCHECKED));
                 CheckMenuItem(hMenu, ID_VIEW_DISASSEMBLY, MF_BYCOMMAND | (FindOwnedWindow(hWndTop, pDisassemblyWndClass, NULL) ? MF_CHECKED : MF_UNCHECKED));
+                CheckMenuItem(hMenu, ID_VIEW_SYMBOLS, MF_BYCOMMAND | (FindOwnedWindow(hWndTop, pSymbolsWndClass, NULL) ? MF_CHECKED : MF_UNCHECKED));
                 CheckMenuItem(hMenu, ID_VIEW_OUTPUT, MF_BYCOMMAND | (GetConsoleWindow() ? MF_CHECKED : MF_UNCHECKED));
                 break;
             }

@@ -215,6 +215,7 @@ BEGIN
         MENUITEM "&Memory",                     ID_VIEW_MEMORY
         MENUITEM "&Breakpoints",                ID_VIEW_BREAKPOINTS
         MENUITEM "&Dissassembly",               ID_VIEW_DISASSEMBLY
+        MENUITEM "&Symbols",                    ID_VIEW_SYMBOLS
         MENUITEM "&Output",                     ID_VIEW_OUTPUT
     END
 END
@@ -245,6 +246,7 @@ BEGIN
     "M",            ID_VIEW_MEMORY,         VIRTKEY, CONTROL, NOINVERT
     "O",            ID_VIEW_OUTPUT,         VIRTKEY, CONTROL, NOINVERT
     "R",            ID_VIEW_REGISTERS,      VIRTKEY, CONTROL, NOINVERT
+    "S",            ID_VIEW_SYMBOLS,        VIRTKEY, CONTROL, NOINVERT
 END
 
 IDR_DISASSEMBLY ACCELERATORS
