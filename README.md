@@ -17,7 +17,7 @@ git clone --recurse-submodules https://github.com/RadAd/RadZ80.git
 ```
 
 ## Install zmac
-
+[![zmac](https://img.shields.io/badge/zmac-18oct2022-blue)](http://48k.ca/zmac.html)
 ```
 MSBuild zmac.vcxproj /t:Update
 ```
