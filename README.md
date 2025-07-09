@@ -8,6 +8,7 @@ Z80 emulator
 
 ## Dependencies
 + [![Z80](https://img.shields.io/badge/Z80-v0.2_pre_2024_09_21-blue)](https://github.com/redcode/Z80) [![Z80 Release](https://img.shields.io/github/v/release/redcode/Z80?label=Latest)](https://github.com/redcode/Z80/releases) [![commits-since](https://img.shields.io/github/commits-since/redcode/Z80/v0.2-pre-2024-09-21)](https://github.com/redcode/Z80/commits/master/)
++ [![Zeta](https://img.shields.io/badge/Z80-6f52371-blue)](https://github.com/redcode/Zeta) [![commits-since](https://img.shields.io/github/commits-since/redcode/Zeta/6f52371)](https://github.com/redcode/Zeta/commits/master/)
 
 ## Clone with Submodules
 
