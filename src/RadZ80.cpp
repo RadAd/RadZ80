@@ -14,12 +14,25 @@
 #include "WindowMgr.h"
 
 HWND g_hWndDlg = NULL;
+HWND g_hWndMain = NULL;
+
+void ShowError(LPCTSTR msg, LPCTSTR caption = TEXT("Rad Z80"))
+{
+    MessageBox(g_hWndMain, msg, caption, MB_OK | MB_ICONERROR);
+}
+
+void ShowError(const std::tstring& msg, LPCTSTR caption = TEXT("Rad Z80"))
+{
+    ShowError(msg.c_str(), caption);
+}
 
 zuint16 LoadCMD(LPCTSTR filename, zuint8* mem)
 {
     zuint16 pc = 0xFFFF;
 
     std::ifstream f(filename, std::ios::binary);
+    if (f.fail())
+        ShowError(std::tstring(TEXT("Error opening: ")) + filename, TEXT("CMD Error"));
     zuint8 t = 0;
     while (f.read((char*) &t, sizeof(t)))
     {
@@ -55,6 +68,8 @@ zuint16 LoadCMD(LPCTSTR filename, zuint8* mem)
 void LoadBIN(LPCTSTR filename, zuint8* mem, zuint16 offset)
 {
     std::ifstream f(filename, std::ios::binary);
+    if (f.fail())
+        ShowError(std::tstring(TEXT("Error opening: ")) + filename, TEXT("BIN Error"));
     const zuint16 chunk = 256u;
     while (f.read((char*) mem + offset, sizeof(*mem) * chunk))
         offset += chunk;
@@ -63,6 +78,8 @@ void LoadBIN(LPCTSTR filename, zuint8* mem, zuint16 offset)
 void LoadLST(LPCTSTR filename, std::map<zuint16, std::tstring>& symbols)
 {
     std::tifstream f(filename);
+    if (f.fail())
+        ShowError(std::tstring(TEXT("Error opening: ")) + filename, TEXT("LST Error"));
     std::tstring line;
     bool in_symbols = false;
     while (std::getline(f, line))
@@ -86,6 +103,8 @@ void LoadLST(LPCTSTR filename, std::map<zuint16, std::tstring>& symbols)
 void LoadLBL(LPCTSTR filename, std::map<zuint16, std::tstring>& symbols)
 {
     std::tifstream f(filename);
+    if (f.fail())
+        ShowError(std::tstring(TEXT("Error opening: ")) + filename, TEXT("LBL Error"));
     std::tstring line;
     while (std::getline(f, line))
     {
@@ -103,6 +122,8 @@ void LoadLBL(LPCTSTR filename, std::map<zuint16, std::tstring>& symbols)
 void LoadMAP(LPCTSTR filename, std::map<zuint16, std::tstring>& symbols)
 {
     std::tifstream f(filename);
+    if (f.fail())
+        ShowError(std::tstring(TEXT("Error opening: ")) + filename, TEXT("MAP Error"));
     std::tstring line;
     bool in_symbols = false;
     while (std::getline(f, line))
@@ -134,6 +155,8 @@ void LoadMAP(LPCTSTR filename, std::map<zuint16, std::tstring>& symbols)
 void LoadIHX(LPCTSTR filename, zuint8* mem)
 {
     std::tifstream f(filename);
+    if (f.fail())
+        ShowError(std::tstring(TEXT("Error opening: ")) + filename, TEXT("IHX Error"));
     std::tstring line;
     while (std::getline(f, line))
     {
@@ -166,18 +189,18 @@ void LoadIHX(LPCTSTR filename, zuint8* mem)
 
             case 1: // End of file
                 if (count != 0)
-                    MessageBox(NULL, TEXT("Expect byte count zero at end of file"), TEXT("IHX Error"), MB_OK | MB_ICONERROR);
+                    ShowError(TEXT("Expect byte count zero at end of file"), TEXT("IHX Error"));
                 break;
 
             default:
-                MessageBox(NULL, TEXT("Unsupported record type"), TEXT("IHX Error"), MB_OK | MB_ICONERROR);
+                ShowError(TEXT("Unsupported record type"), TEXT("IHX Error"));
                 break;
             }
             const zuint8 checksum = std::stoi(line.substr(offset, 2), nullptr, 16);
             offset += 2;
             const zuint8 check = zuint8(~sum) + 1;
             if (checksum != check)
-                MessageBox(NULL, TEXT("Error in checksum"), TEXT("IHX Error"), MB_OK | MB_ICONERROR);
+                ShowError(TEXT("Error in checksum"), TEXT("IHX Error"));
         }
     }
 }
@@ -197,6 +220,9 @@ int APIENTRY tWinMain(_In_ const HINSTANCE hInstance, _In_opt_ const HINSTANCE h
 
     const auto m = std::make_unique<Machine>();
 
+    // NMI Interrupt routine at 0x0066
+    copy(m->memory + 0x0066, { 0xED, 0x45 }); // RETN
+
     bool loaded = false;
     zuint16 start = 0;
     for (int argi = 1; argi < __argc; ++argi)
@@ -215,12 +241,14 @@ int APIENTRY tWinMain(_In_ const HINSTANCE hInstance, _In_opt_ const HINSTANCE h
         else if (ext && _tcsicmp(ext, TEXT(".bin")) == 0)    // from sdcc
         {
             start = 0;
+            copy(m->memory + start, { 0xC3, LO(start), HI(start) }); // JP start
             LoadBIN(arg, m->memory, start);
             loaded = true;
         }
         else if (ext && _tcsicmp(ext, TEXT(".com")) == 0)    // from millfork
         {
-            start = 0x100;
+            start = 0x0100;
+            copy(m->memory + start, { 0xC3, LO(start), HI(start) }); // JP start            m->memory[start + 0] = 0xC3; // JP start
             LoadBIN(arg, m->memory, start);
             loaded = true;
         }
@@ -239,7 +267,7 @@ int APIENTRY tWinMain(_In_ const HINSTANCE hInstance, _In_opt_ const HINSTANCE h
             LoadMAP(arg, m->symbols);
         }
         else
-            MessageBox(NULL, arg, TEXT("Unknown file format"), MB_OK | MB_ICONERROR);
+            ShowError(std::tstring(TEXT("Unknown file format: ")) + arg);
     }
     //m->breakpoint.insert(start + 0x02);
     //m->breakpoint.insert(start + 0x04);
@@ -247,7 +275,12 @@ int APIENTRY tWinMain(_In_ const HINSTANCE hInstance, _In_opt_ const HINSTANCE h
 
     z80_power(&m->cpu, TRUE);
 
+#if 1
+    if (start != 0)
+        copy(m->memory + 0x0000, { 0xC3, LO(start), HI(start) }); // JP start
+#else
     Z80_PC(m->cpu) = start;
+#endif
 
     INITCOMMONCONTROLSEX icex;
     ZeroMemory(&icex, sizeof(INITCOMMONCONTROLSEX));
@@ -258,15 +291,16 @@ int APIENTRY tWinMain(_In_ const HINSTANCE hInstance, _In_opt_ const HINSTANCE h
 
     //const HWND hWndMain = CreateDialogParam(hInstance, MAKEINTRESOURCE(IDD_REGISTERS), NULL, DlgMainProc, LPARAM(m));
     const HWND hWndMain = CreateWindow(pTerminalWndClass, TEXT("Z80 Terminal"), WS_OVERLAPPEDWINDOW & ~(WS_THICKFRAME), CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, hInstance, m.get());
+    g_hWndMain = hWndMain;
     if (hWndMain == NULL)
     {
-        MessageBox(NULL, TEXT("Error creating window"), TEXT("Rad Z80"), MB_OK | MB_ICONERROR);
+        ShowError(TEXT("Error creating window"));
         return 0;
     }
     ShowWindow(hWndMain, SW_SHOW);
 
     if (!loaded)
-        MessageBox(hWndMain, TEXT("No program loaded"), TEXT("Rad Z80"), MB_OK | MB_ICONERROR);
+        ShowError(TEXT("No program loaded"));
 
     g_hAccel.insert(std::make_pair(hWndMain, LoadAccelerators(NULL, MAKEINTRESOURCE(IDR_MAIN))));
 
@@ -290,7 +324,7 @@ int APIENTRY tWinMain(_In_ const HINSTANCE hInstance, _In_opt_ const HINSTANCE h
     }
     if (bRet < 0)
     {
-        MessageBox(NULL, TEXT("Error in GetMessage"), TEXT("Rad Z80"), MB_OK | MB_ICONERROR);
+        ShowError(TEXT("Error in GetMessage"));
     }
 
     m->Exit();

@@ -16,6 +16,13 @@
 #define tstring string
 #endif
 
+inline zuint8 LO(const zuint16 v) { return zuint8(v & 0x00FF); }
+inline zuint8 HI(const zuint16 v) { return zuint8((v >> 8) & 0x00FF); }
+inline void copy(zuint8* dest, const zuint8* src, const zuint16 len) { memcpy(dest, src, len); }
+template <size_t N>
+inline void copy(zuint8* dest, zuint8(&src)[N]) { copy(dest, src, N); }
+inline void copy(zuint8* dest, const std::initializer_list<zuint8>& src) { copy(dest, src.begin(), zuint16(src.size())); }
+
 #define WM_UPDATE_STATE (WM_USER + 10)
 
 #define WM_CPU_STEP_START   (WM_USER + 101)

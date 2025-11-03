@@ -199,6 +199,9 @@ IDR_MAIN MENU
 BEGIN
     POPUP "&Machine"
     BEGIN
+        MENUITEM "Instant Reset",               ID_MACHINE_INSTANTRESET
+        MENUITEM "Special Reset",               ID_MACHINE_SPECIALRESET
+        MENUITEM "NMI",                         ID_MACHINE_NMI
         MENUITEM "E&xit",                       ID_FILE_EXIT
     END
     POPUP "&Debug"

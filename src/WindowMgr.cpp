@@ -179,6 +179,21 @@ LRESULT CALLBACK MenuWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
             m->Stop();
             return TRUE;
 
+        case ID_MACHINE_NMI:
+            z80_nmi(&m->cpu);
+            return TRUE;
+
+        case ID_MACHINE_INSTANTRESET:
+            z80_instant_reset(&m->cpu);
+            m->SendRegChanged(Reg16::PC);
+            return TRUE;
+
+#ifdef Z80_WITH_SPECIAL_RESET
+        case ID_MACHINE_SPECIALRESET:
+            z80_special_reset(&m->cpu);
+            return TRUE;
+#endif
+
         case ID_FILE_EXIT:
             DestroyWindow(hWndTop);
             return TRUE;
@@ -221,6 +236,13 @@ LRESULT CALLBACK MenuWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
                 AddAccel(hMenu, itAccel->second);
             switch (nItem)
             {
+            case 0:
+#ifdef Z80_WITH_SPECIAL_RESET
+                EnableMenuItem(hMenu, ID_MACHINE_SPECIALRESET, MF_BYCOMMAND | MF_ENABLED);
+#else
+                EnableMenuItem(hMenu, ID_MACHINE_SPECIALRESET, MF_BYCOMMAND | MF_DISABLED);
+#endif
+                break;
             case 1:
                 _ASSERTE(GetMenuItemID(hMenu, 0) == ID_DEBUG_RUN);
                 switch (m->GetState())
