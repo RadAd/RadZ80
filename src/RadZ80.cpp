@@ -225,6 +225,7 @@ int APIENTRY tWinMain(_In_ const HINSTANCE hInstance, _In_opt_ const HINSTANCE h
 
     bool loaded = false;
     zuint16 start = 0;
+    zuint16 load = 0x0100;
     for (int argi = 1; argi < __argc; ++argi)
     {
         const LPCTSTR arg = __targv[argi];
@@ -247,8 +248,8 @@ int APIENTRY tWinMain(_In_ const HINSTANCE hInstance, _In_opt_ const HINSTANCE h
         }
         else if (ext && _tcsicmp(ext, TEXT(".com")) == 0)    // from millfork
         {
-            start = 0x0100;
-            copy(m->memory + start, { 0xC3, LO(start), HI(start) }); // JP start            m->memory[start + 0] = 0xC3; // JP start
+            start = load;
+            //copy(m->memory + start, { 0xC3, LO(start), HI(start) }); // JP start            m->memory[start + 0] = 0xC3; // JP start
             LoadBIN(arg, m->memory, start);
             loaded = true;
         }
@@ -266,6 +267,10 @@ int APIENTRY tWinMain(_In_ const HINSTANCE hInstance, _In_opt_ const HINSTANCE h
         {
             LoadMAP(arg, m->symbols);
         }
+        else if (_tcsicmp(arg, TEXT("-load")) == 0)
+        {
+            load = std::stoi(__targv[++argi], nullptr, 16);
+        }
         else
             ShowError(std::tstring(TEXT("Unknown file format: ")) + arg);
     }
@@ -276,6 +281,9 @@ int APIENTRY tWinMain(_In_ const HINSTANCE hInstance, _In_opt_ const HINSTANCE h
     z80_power(&m->cpu, TRUE);
 
 #if 1
+    std::map<zuint16, std::tstring>::const_iterator itMain = m->FindSymbol(0, TEXT(".main"), false, true, true);
+    if (itMain != m->symbols.end())
+        start = itMain->first;
     if (start != 0)
         copy(m->memory + 0x0000, { 0xC3, LO(start), HI(start) }); // JP start
 #else
