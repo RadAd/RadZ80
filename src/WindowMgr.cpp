@@ -184,8 +184,9 @@ LRESULT CALLBACK MenuWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
             return TRUE;
 
         case ID_MACHINE_INSTANTRESET:
+            m->SendRegChanged(Reg16::PC); // Before
             z80_instant_reset(&m->cpu);
-            m->SendRegChanged(Reg16::PC);
+            m->SendRegChanged(Reg16::PC); // After
             return TRUE;
 
 #ifdef Z80_WITH_SPECIAL_RESET
