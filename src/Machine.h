@@ -116,8 +116,8 @@ public:
     void Exit();
 
     State GetState() const { return s; }
-    void Register(HWND hWnd) { hWnds.insert(hWnd); }
-    void Unregister(HWND hWnd) { hWnds.erase(hWnd); }
+    void Register(HWND hWnd) { std::unique_lock<std::mutex> lk(m); hWnds.insert(hWnd); }
+    void Unregister(HWND hWnd) { std::unique_lock<std::mutex> lk(m); hWnds.erase(hWnd); }
 
     void MemWrite(zuint16 address, zuint8 value, bool fromemulation);
     zuint16 MemReadU16(zuint16 address) const
@@ -127,6 +127,15 @@ public:
 
     void SendRegChanged(Reg8 reg) const { SendAllMessage(WM_REG_CHANGED, 0, (LPARAM) reg); }
     void SendRegChanged(Reg16 reg) const { SendAllMessage(WM_REG_CHANGED, 0, (LPARAM) reg); }
+
+    void CheckTimer()
+    {
+        if (cpu.cycles >= nexttimer)
+        {
+            nexttimer += 1000;
+            z80_nmi(&cpu);
+        }
+    }
 
     bool IsBreakPoint(zuint16 address) const { return breakpoint.find(address) != breakpoint.end(); }
     bool IsTempBreakPoint(zuint16 address) const { return tempbreakpoint.find(address) != tempbreakpoint.end(); }
@@ -168,10 +177,12 @@ private:
 
     State s;
     std::thread runz80;
-    std::mutex m;
+    mutable std::mutex m;
     std::condition_variable cv;
 
     std::set<HWND> hWnds;
+
+    zusize nexttimer;
 
     friend void RunZ80(Machine* m);
     friend void MachineWrite(void* context, zuint16 address, zuint8 value);

@@ -12,7 +12,12 @@ LPCTSTR symbol(UINT16 adr, const void* data)
 
 void Machine::SendAllMessage(UINT Msg, WPARAM wParam, LPARAM lParam) const
 {
-    for (HWND hWnd : hWnds)
+    std::set<HWND> CopyWnds;
+    {
+        std::unique_lock<std::mutex> lk(m);
+        CopyWnds = hWnds;
+    }
+    for (HWND hWnd : CopyWnds)
         SendMessage(hWnd, Msg, wParam, lParam);
 }
 
@@ -28,7 +33,9 @@ static void RunZ80(Machine* m)
         }
 
         m->SendAllMessage(WM_UPDATE_STATE);
-        z80_run(&m->cpu, Z80_MAXIMUM_CYCLES);
+        const zusize cycles = z80_run(&m->cpu, Z80_MAXIMUM_CYCLES);
+        m->CheckTimer();
+        m->nexttimer -= cycles;
     }
     m->s = State::EXIT;
     m->SendAllMessage(WM_UPDATE_STATE);
@@ -37,9 +44,17 @@ static void RunZ80(Machine* m)
 void Machine::Step()
 {
     SendAllMessage(WM_CPU_STEP_START);
-    do
+    if (cpu.request & Z80_REQUEST_NMI)
     {
         z80_run(&cpu, 1);
+        breakonret = Z80_SP(cpu);
+        z80_run(&cpu, Z80_MAXIMUM_CYCLES);
+    }
+    do
+    {
+        const zusize cycles = z80_run(&cpu, 1);
+        CheckTimer();
+        nexttimer -= cycles;
     } while (cpu.resume == Z80_RESUME_XY);
     SendAllMessage(WM_CPU_STEP_STOP);
 }
@@ -56,7 +71,7 @@ void Machine::Stop()
     tempbreakpoint.clear();
     dobreak = false;
     breakonret = 0xFFFF;
-    cpu.cycles = cpu.cycle_limit;
+    cpu.cycle_limit = cpu.cycles;
     SendAllMessage(WM_UPDATE_STATE);
 }
 
@@ -91,7 +106,7 @@ static zuint8 MachineHook(void* context, zuint16 address)
 {
     Machine* m = static_cast<Machine*>(context);
     if (m->GetState() == State::EXIT)
-        m->cpu.cycles = m->cpu.cycle_limit;
+        m->cpu.cycle_limit = m->cpu.cycles;
     else
         m->Stop();
     return Z80_HOOK;
@@ -106,6 +121,7 @@ static zuint8 MachineRead(void* context, zuint16 address)
 static zuint8 MachineFetchOpcode(void* context, zuint16 address)
 {
     const Machine* m = static_cast<Machine*>(context);
+    const_cast<Machine*>(m)->CheckTimer();
     if (m->cpu.cycles != 0 && (m->GetState() == State::EXIT || m->dobreak || m->IsBreakPoint(address) || m->IsTempBreakPoint(address)))
         return Z80_HOOK;
 
@@ -155,4 +171,5 @@ Machine::Machine()
     dobreak = false;
     breakonret = 0xFFFF;
     runz80 = std::thread(RunZ80, this);
+    nexttimer = 0;
 }
