@@ -26,6 +26,20 @@ void ShowError(const std::tstring& msg, LPCTSTR caption = TEXT("Rad Z80"))
     ShowError(msg.c_str(), caption);
 }
 
+template<typename T>
+inline T read(std::istream& s)
+{
+    T v = {};
+    s.read(reinterpret_cast<char*>(&v), sizeof(v));
+    return v;
+}
+
+template<typename T>
+inline std::istream& read(std::istream& s, T* v, size_t len = 1)
+{
+    return s.read(reinterpret_cast<char*>(v), sizeof(*v) * len);
+}
+
 zuint16 LoadCMD(LPCTSTR filename, zuint8* mem)
 {
     zuint16 pc = 0xFFFF;
@@ -33,23 +47,19 @@ zuint16 LoadCMD(LPCTSTR filename, zuint8* mem)
     std::ifstream f(filename, std::ios::binary);
     if (f.fail())
         ShowError(std::tstring(TEXT("Error opening: ")) + filename, TEXT("CMD Error"));
+    f.exceptions(std::ios::failbit | std::ios::badbit);
     zuint8 t = 0;
-    while (f.read((char*) &t, sizeof(t)))
+    while (read(f, &t))
     {
         switch (t)
         {
         case 1:
         {
-            zuint8 len8 = 0;
-            f.read((char*) &len8, sizeof(len8));
-            zuint16 len = len8;
-            if (len < 3)
-                len += 254;
+            const zuint8 len8 = read<zuint8>(f);
+            const zuint16 len = len8 < 3 ? len8 + 254 : len8;
+            const zuint16 addr = read<zuint16>(f);
 
-            zuint16 addr = 0;
-            f.read((char*) &addr, sizeof(addr));
-
-            f.read((char*) (mem + addr), sizeof(zuint8) * len);
+            read(f, mem + addr, len);
 
             if (pc == 0xFFFF)
                 pc = addr;
@@ -70,8 +80,9 @@ void LoadBIN(LPCTSTR filename, zuint8* mem, zuint16 offset)
     std::ifstream f(filename, std::ios::binary);
     if (f.fail())
         ShowError(std::tstring(TEXT("Error opening: ")) + filename, TEXT("BIN Error"));
+    f.exceptions(std::ios::failbit | std::ios::badbit);
     const zuint16 chunk = 256u;
-    while (f.read((char*) mem + offset, sizeof(*mem) * chunk))
+    while (read(f, mem + offset, chunk))
         offset += chunk;
 }
 
@@ -80,6 +91,7 @@ void LoadLST(LPCTSTR filename, std::map<zuint16, std::tstring>& symbols)
     std::tifstream f(filename);
     if (f.fail())
         ShowError(std::tstring(TEXT("Error opening: ")) + filename, TEXT("LST Error"));
+    f.exceptions(std::ios::failbit | std::ios::badbit);
     std::tstring line;
     bool in_symbols = false;
     while (std::getline(f, line))
@@ -105,6 +117,7 @@ void LoadLBL(LPCTSTR filename, std::map<zuint16, std::tstring>& symbols)
     std::tifstream f(filename);
     if (f.fail())
         ShowError(std::tstring(TEXT("Error opening: ")) + filename, TEXT("LBL Error"));
+    f.exceptions(std::ios::failbit | std::ios::badbit);
     std::tstring line;
     while (std::getline(f, line))
     {
@@ -124,6 +137,7 @@ void LoadMAP(LPCTSTR filename, std::map<zuint16, std::tstring>& symbols)
     std::tifstream f(filename);
     if (f.fail())
         ShowError(std::tstring(TEXT("Error opening: ")) + filename, TEXT("MAP Error"));
+    f.exceptions(std::ios::failbit | std::ios::badbit);
     std::tstring line;
     bool in_symbols = false;
     while (std::getline(f, line))
@@ -157,6 +171,7 @@ void LoadIHX(LPCTSTR filename, zuint8* mem)
     std::tifstream f(filename);
     if (f.fail())
         ShowError(std::tstring(TEXT("Error opening: ")) + filename, TEXT("IHX Error"));
+    f.exceptions(std::ios::failbit | std::ios::badbit);
     std::tstring line;
     while (std::getline(f, line))
     {
